@@ -1,2 +1,0 @@
-/home/alex504/OpenCV_Playground/OpenCV_Project/04_cl_official_example/build/CMakeFiles/edit_cache.dir
-/home/alex504/OpenCV_Playground/OpenCV_Project/04_cl_official_example/build/CMakeFiles/rebuild_cache.dir
