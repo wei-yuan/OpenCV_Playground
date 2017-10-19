@@ -1,4 +1,4 @@
-#include ./config.mak -> you can move all the FLAG to here and make file without config.mak file
+#include ./config.mak
 #get all c++ files.
 SRCS=$(wildcard *.cpp)
 OBJS=$(addprefix objs/, $(patsubst %.cpp,%.o,$(SRCS)))
@@ -14,7 +14,7 @@ LFLAGS= -L$(PREFIX)/lib -I$(PREFIX)/include -lOpenCL
 
 LOCAL_CFLAGS=-Wno-deprecated-declarations
 
-TARGET=example 
+TARGET=02_kalman
 
 .PHONY: all clean execute directories
 
@@ -22,7 +22,7 @@ all	:	directories $(TARGET)
 
 $(TARGET)	:	$(OBJS)
 	@echo "  LINK  $@"
-	@$(CXX) $^ -o $@ $(CFLAGS) $(LFLAGS) $(LOCAL_CFLAGS)
+	@$(CXX) $^ -o $@ $(CFLAGS) $(LIBS) $(LFLAGS) $(LOCAL_CFLAGS)
 
 objs/%.o	:	%.cpp
 	@echo "  CXX    $@"
