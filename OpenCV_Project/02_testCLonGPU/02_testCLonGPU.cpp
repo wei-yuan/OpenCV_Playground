@@ -3,7 +3,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/ocl.hpp>
-
+#include <CL/cl.h>
 
 using namespace cv;
 using namespace std;
@@ -11,7 +11,7 @@ using namespace std;
 int main()
 {
     // cap is the object of class video capture that tries to capture Bumpy.mp4
-    VideoCapture cap("../../test1_720p.mp4");
+    VideoCapture cap("../../../img_video_file/test1_720p.mp4");
 	
     if ( !cap.isOpened() )  // isOpened() returns true if capturing has been initialized.
     {
