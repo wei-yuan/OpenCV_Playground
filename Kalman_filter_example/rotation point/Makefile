@@ -14,7 +14,7 @@ LFLAGS= -L$(PREFIX)/lib -I$(PREFIX)/include -lOpenCL
 
 LOCAL_CFLAGS=-Wno-deprecated-declarations
 
-TARGET=02_kalman
+TARGET=kalman
 
 .PHONY: all clean execute directories
 

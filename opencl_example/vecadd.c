@@ -12,166 +12,152 @@ Sources: http://www.eriksmistad.no/getting-started-with-opencl-and-gpu-computing
 #include <CL/cl.h>
 #endif
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #define MAX_SOURCE_SIZE (0x100000)
 
+int main(int argc, char **argv)
+{
 
+    int SIZE = 1024;
 
-int main(int argc, char ** argv) {
+    float *A = (float *)malloc(sizeof(float) * SIZE);
+    float *B = (float *)malloc(sizeof(float) * SIZE);
+    float *C = (float *)malloc(sizeof(float) * SIZE);
 
-	int SIZE = 1024;
+    int i = 0;
 
-	float *A = (float*)malloc(sizeof(float)*SIZE);
-	float *B = (float*)malloc(sizeof(float)*SIZE);
-	float *C = (float*)malloc(sizeof(float)*SIZE);
+    for (i = 0; i < SIZE; ++i) {
+        A[i] = i + 1;
+        B[i] = (i + 1) * 2;
+    }
 
-	int i = 0;
+    // Load kernel from file vecadd.cl
 
-	for (i=0; i<SIZE; ++i) {
-		A[i] = i+1;
-		B[i] = (i+1)*2;
-	}
+    FILE * kernelFile;
+    char * kernelSource;
+    size_t kernelSize;
 
-	// Load kernel from file vecadd.cl
+    kernelFile = fopen("vecadd.cl", "r");
 
-	FILE *kernelFile;
-	char *kernelSource;
-	size_t kernelSize;
+    if (!kernelFile) {
 
-	kernelFile = fopen("vecadd.cl", "r");
+        fprintf(stderr, "No file named vecadd.cl was found\n");
 
-	if (!kernelFile) {
+        exit(-1);
+    }
+    kernelSource = (char *)malloc(MAX_SOURCE_SIZE);
+    kernelSize   = fread(kernelSource, 1, MAX_SOURCE_SIZE, kernelFile);
+    fclose(kernelFile);
 
-		fprintf(stderr, "No file named vecadd.cl was found\n");
+    cl_int ret;
 
-		exit(-1);
+    // Getting platform and device information
+    cl_platform_id  platformID   = NULL;
+    cl_uint         numPlatforms = 0;
+    cl_platform_id *platforms    = NULL;
+    /* ret = clGetPlatformIDs(0, platforms, &numPlatforms); */
+    numPlatforms = 1;
+    platforms    = (cl_platform_id *)malloc(sizeof(cl_platform_id) * numPlatforms);
+    ret          = clGetPlatformIDs(numPlatforms, platforms, NULL);
+    platformID   = platforms[0];
 
-	}
-	kernelSource = (char*)malloc(MAX_SOURCE_SIZE);
-	kernelSize = fread(kernelSource, 1, MAX_SOURCE_SIZE, kernelFile);
-	fclose(kernelFile);
+    /* ret = clGetPlatformIDs(1, &platformID, &numPlatforms); */
 
-	cl_int ret;
+    /* printf("num %d\n", numPlatforms); */
+    /* printf("ret %d\n", ret); */
 
-	// Getting platform and device information
-	cl_platform_id platformID = NULL;
-	cl_uint numPlatforms = 0;
-  cl_platform_id * platforms = NULL;
-  /* ret = clGetPlatformIDs(0, platforms, &numPlatforms); */
-  numPlatforms = 1;
-  platforms = (cl_platform_id *)malloc(sizeof(cl_platform_id) * numPlatforms);
-  ret = clGetPlatformIDs(numPlatforms, platforms, NULL);
-  platformID = platforms[0];
+    char   buf[1024];
+    size_t ii;
+    clGetPlatformInfo(platformID, CL_PLATFORM_PROFILE, 2048, buf, &ii);
+    puts(buf);
 
-  /* ret = clGetPlatformIDs(1, &platformID, &numPlatforms); */
+    /* printf("plt %d\n", platformID); */
 
-  /* printf("num %d\n", numPlatforms); */
-  /* printf("ret %d\n", ret); */
+    cl_device_id deviceID = NULL;
 
+    cl_device_id *devices    = NULL;
+    cl_uint       numDevices = 0;
+    /* ret = clGetDeviceIDs(platformID, CL_DEVICE_TYPE_GPU, 0, devices, &numDevices); */
+    numDevices = 1;
+    devices    = malloc(sizeof(cl_device_id) * numDevices);
+    ret        = clGetDeviceIDs(platformID, CL_DEVICE_TYPE_GPU, numDevices, devices, NULL);
+    deviceID   = devices[0];
 
-  char buf [1024];
-  size_t ii;
-  clGetPlatformInfo(platformID, CL_PLATFORM_PROFILE, 2048, buf, &ii);
-  puts(buf);
+    /* ret = clGetDeviceIDs(platformID, CL_DEVICE_TYPE_GPU, 1, &deviceID, &numDevices); */
 
+    /* printf("num %d\n", numDevices); */
+    /* printf("ret %d\n", ret); */
 
+    // Creating context.
+    cl_context context = clCreateContext(NULL, numDevices, &deviceID, NULL, NULL, &ret);
 
-  /* printf("plt %d\n", platformID); */
+    // Creating command queue
+    cl_command_queue commandQueue = clCreateCommandQueue(context, deviceID, 0, &ret);
 
-	cl_device_id deviceID = NULL;
+    // Memory buffers for each array
+    cl_mem aMemObj = clCreateBuffer(context, CL_MEM_READ_ONLY, SIZE * sizeof(float), NULL, &ret);
+    cl_mem bMemObj = clCreateBuffer(context, CL_MEM_READ_ONLY, SIZE * sizeof(float), NULL, &ret);
+    cl_mem cMemObj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, SIZE * sizeof(float), NULL, &ret);
 
-  cl_device_id * devices = NULL;
-	cl_uint numDevices = 0;
-	/* ret = clGetDeviceIDs(platformID, CL_DEVICE_TYPE_GPU, 0, devices, &numDevices); */
-  numDevices = 1;
-  devices = malloc(sizeof(cl_device_id) * numDevices);
-	ret = clGetDeviceIDs(platformID, CL_DEVICE_TYPE_GPU, numDevices, devices, NULL);
-  deviceID = devices[0];
+    // Copy lists to memory buffers
+    ret = clEnqueueWriteBuffer(commandQueue, aMemObj, CL_TRUE, 0, SIZE * sizeof(float), A, 0, NULL, NULL);
+    ;
+    ret = clEnqueueWriteBuffer(commandQueue, bMemObj, CL_TRUE, 0, SIZE * sizeof(float), B, 0, NULL, NULL);
 
-	/* ret = clGetDeviceIDs(platformID, CL_DEVICE_TYPE_GPU, 1, &deviceID, &numDevices); */
+    // Create program from kernel source
+    cl_program program =
+      clCreateProgramWithSource(context, 1, (const char **)&kernelSource, (const size_t *)&kernelSize, &ret);
 
+    // Build program
+    ret = clBuildProgram(program, 1, &deviceID, NULL, NULL, NULL);
 
-  /* printf("num %d\n", numDevices); */
-  /* printf("ret %d\n", ret); */
+    // Create kernel
+    cl_kernel kernel = clCreateKernel(program, "vecadd", &ret);
 
+    // Set arguments for kernel
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&aMemObj);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&bMemObj);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&cMemObj);
 
-	// Creating context.
-	cl_context context = clCreateContext(NULL, numDevices, &deviceID, NULL, NULL,  &ret);
+    // Execute the kernel
+    size_t globalItemSize = SIZE;
+    size_t localItemSize  = 64; // globalItemSize has to be a multiple of localItemSize. 1024/64 = 16
+    ret = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, &globalItemSize, &localItemSize, 0, NULL, NULL);
 
-	// Creating command queue
-	cl_command_queue commandQueue = clCreateCommandQueue(context, deviceID, 0, &ret);
+    // Read from device back to host.
+    ret = clEnqueueReadBuffer(commandQueue, cMemObj, CL_TRUE, 0, SIZE * sizeof(float), C, 0, NULL, NULL);
 
-  // Memory buffers for each array
-	cl_mem aMemObj = clCreateBuffer(context, CL_MEM_READ_ONLY, SIZE * sizeof(float), NULL, &ret);
-	cl_mem bMemObj = clCreateBuffer(context, CL_MEM_READ_ONLY, SIZE * sizeof(float), NULL, &ret);
-	cl_mem cMemObj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, SIZE * sizeof(float), NULL, &ret);
+    // Write result
+    for (i = 0; i < 10; ++i) {
+        printf("%f + %f = %f\n", A[i], B[i], C[i]);
+    }
 
+    // Test if correct answer
+    for (i = 0; i < SIZE; ++i) {
+        if (C[i] != (A[i] + B[i])) {
+            printf("Something didn't work correctly! Failed test. %d != %d + %d\n", C[i], A[i], B[i]);
+            break;
+        }
+    }
+    if (i == SIZE) {
+        printf("Everything seems to work fine! \n");
+    }
 
+    // Clean up, release memory.
+    ret = clFlush(commandQueue);
+    ret = clFinish(commandQueue);
+    ret = clReleaseCommandQueue(commandQueue);
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    ret = clReleaseMemObject(aMemObj);
+    ret = clReleaseMemObject(bMemObj);
+    ret = clReleaseMemObject(cMemObj);
+    ret = clReleaseContext(context);
+    free(A);
+    free(B);
+    free(C);
 
-	// Copy lists to memory buffers
-	ret = clEnqueueWriteBuffer(commandQueue, aMemObj, CL_TRUE, 0, SIZE * sizeof(float), A, 0, NULL, NULL);;
-	ret = clEnqueueWriteBuffer(commandQueue, bMemObj, CL_TRUE, 0, SIZE * sizeof(float), B, 0, NULL, NULL);
-
-	// Create program from kernel source
-	cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, (const size_t *)&kernelSize, &ret);	
-
-	// Build program
-	ret = clBuildProgram(program, 1, &deviceID, NULL, NULL, NULL);
-
-	// Create kernel
-	cl_kernel kernel = clCreateKernel(program, "vecadd", &ret);
-
-
-	// Set arguments for kernel
-	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&aMemObj);
-	ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&bMemObj);
-	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&cMemObj);
-
-
-	// Execute the kernel
-	size_t globalItemSize = SIZE;
-	size_t localItemSize = 64; // globalItemSize has to be a multiple of localItemSize. 1024/64 = 16 
-	ret = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, &globalItemSize, &localItemSize, 0, NULL, NULL);	
-
-
-	// Read from device back to host.
-	ret = clEnqueueReadBuffer(commandQueue, cMemObj, CL_TRUE, 0, SIZE * sizeof(float), C, 0, NULL, NULL);
-
-	// Write result
-	for (i=0; i<10; ++i) {
-		printf("%f + %f = %f\n", A[i], B[i], C[i]);
-	}
-
-	// Test if correct answer
-	for (i=0; i<SIZE; ++i) {
-		if ( C[i] != (A[i] + B[i]) ) {
-			printf("Something didn't work correctly! Failed test. %d != %d + %d\n", C[i], A[i], B[i]);
-			break;
-		}
-	}
-	if (i == SIZE) {
-		printf("Everything seems to work fine! \n");
-	}
-
-	// Clean up, release memory.
-	ret = clFlush(commandQueue);
-	ret = clFinish(commandQueue);
-	ret = clReleaseCommandQueue(commandQueue);
-	ret = clReleaseKernel(kernel);
-	ret = clReleaseProgram(program);
-	ret = clReleaseMemObject(aMemObj);
-	ret = clReleaseMemObject(bMemObj);
-	ret = clReleaseMemObject(cMemObj);
-	ret = clReleaseContext(context);
-	free(A);
-	free(B);
-	free(C);
-
-	return 0;
-
+    return 0;
 }

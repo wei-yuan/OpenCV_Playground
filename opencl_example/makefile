@@ -1,5 +1,5 @@
 
-PREFIX=/usr/local/cuda/targets/x86_64-linux
+PREFIX=/usr/local/x86_64-linux
 CFLAGS=-L$(PREFIX)/lib -I$(PREFIX)/include -lOpenCL
 
 vecadd: vecadd.c
