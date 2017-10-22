@@ -43,7 +43,9 @@ int main()
             break;
         }
 
-        //cv::cvtColor(frame, frameGray, cv::COLOR_BGR2GRAY);        
+        // Image Filtering ex. sobel and threshold
+        // cv::cvtColor(frame, frameGray, cv::COLOR_BGR2GRAY); 
+
         // Kalman filter for tracking
         
         imshow( "Frame", frame );

@@ -1,3 +1,4 @@
+# OpenCV + OpenCL Makefile template
 #include ./config.mak
 #get all c++ files.
 SRCS=$(wildcard *.cpp)

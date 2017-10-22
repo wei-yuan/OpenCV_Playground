@@ -26,10 +26,13 @@ class HoughLaneDetector
         vote = 50;
     }
     //
-    std::vector<float> _standard_hough()
+    std::vector<float> _standard_hough(cv::UMat & frame, int init_vote)
     {
-        // Hough Trnasform
+        // Hough Trnasform wrapper to return a series of point
         std::vector<float> vec_points = {0.0, 0.0, 0.0, 0.0};
+        std::vector<Vec2f> lines;
+        //HoughLines(frame, 1, CV_PI/180, init_vote);
+
         return vec_points;
     }
     // float _base_distance(float x1, float y1, float x2, float y2, float width) {}
