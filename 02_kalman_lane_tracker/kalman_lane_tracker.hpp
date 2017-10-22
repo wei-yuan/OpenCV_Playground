@@ -2,6 +2,7 @@
 # define KALMAN_LANE_TRACKER_H
 
 #include <iostream>
+#include <vector>
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
@@ -18,7 +19,7 @@ protected:
 public:
     KalmanLaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale, float process_cov_parallel, int proc_noise_type)
     {
-        KalmanFilter kf(state_size, meas_size, contr_size);
+        //KalmanFilter kf(state_size, meas_size, contr_size);
         //kf.transitionMatrix = ? ;
     }
     ~KalmanLaneTracker() {}

@@ -5,16 +5,17 @@ OBJS=$(addprefix objs/, $(patsubst %.cpp,%.o,$(SRCS)))
 DEPS=$(addprefix objs/, $(patsubst %.cpp,%.d,$(SRCS)))
 
 CXX=g++
-
-CFLAGS=-g -Wall `pkg-config --cflags opencv` 
+DEBUG = -g
+CFLAGS= -Wall -std=c++11 `pkg-config --cflags opencv` 
 LIBS=`pkg-config --libs opencv`
 
+# OpenCL Dynamic Linking
 PREFIX=/usr/local/cuda/targets/x86_64-linux
 LFLAGS=-L$(PREFIX)/lib -I$(PREFIX)/include -lOpenCL
 
 LOCAL_CFLAGS=-Wno-deprecated-declarations
 
-TARGET=kalman
+TARGET=lane_detection_and_tracking
 
 .PHONY: all clean execute directories
 
@@ -22,7 +23,7 @@ all	:	directories $(TARGET)
 
 $(TARGET)	:	$(OBJS)
 	@echo "  LINK  $@"
-	@$(CXX) $^ -o $@ $(CFLAGS) $(LIBS) $(LFLAGS) $(LOCAL_CFLAGS)
+	@$(CXX) $^ -o $@ $(DEBUG) $(CFLAGS) $(LIBS) $(LFLAGS) $(LOCAL_CFLAGS)
 
 objs/%.o	:	%.cpp
 	@echo "  CXX    $@"
