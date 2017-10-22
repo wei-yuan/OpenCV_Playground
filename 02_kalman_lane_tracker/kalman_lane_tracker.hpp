@@ -1,11 +1,13 @@
+# ifndef KALMAN_LANE_TRACKER_H
+# define KALMAN_LANE_TRACKER_H
+
 #include <iostream>
-#include <ctime>
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
 using namespace cv;
 
-class LaneTracker
+class KalmanLaneTracker
 {
 protected:
     int n_lanes;
@@ -14,12 +16,12 @@ protected:
     int contr_size = 0;
 
 public:
-    LaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale, float process_cov_parallel, int proc_noise_type)
+    KalmanLaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale, float process_cov_parallel, int proc_noise_type)
     {
         KalmanFilter kf(state_size, meas_size, contr_size);
         //kf.transitionMatrix = ? ;
     }
-    ~LaneTracker() {}
+    ~KalmanLaneTracker() {}
     float _update_dt(float dt)
     {
         for (int i = 0; i < state_size; i++) {
@@ -30,3 +32,4 @@ public:
     float update() {}
     float predict() {}
 };
+# endif
