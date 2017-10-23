@@ -35,13 +35,13 @@ public:
         // -theta: The resolution of the parameter \theta in radians. We use 1 degree (CV_PI/180)
         // -threshold: The minimum number of intersections to “detect” a line
         // -srn and -stn: Default parameters to zero. Check OpenCV reference for more info.
-        int                init_vote = 50; // what's this for?
+        int                init_vote = 150; // what's this for?
         std::vector<cv::Vec2f> lines;
-        HoughLines(frame, lines, 1, CV_PI/180, init_vote, 50, 10);
+        HoughLines(frame, lines, 1, CV_PI/180, init_vote, 0, 0);
 
         cv::Point pt1, pt2;
         auto l = {pt1, pt2};
-        
+
         for (auto& line : lines) {
             float rho   = line[0];
             float theta = line[1];

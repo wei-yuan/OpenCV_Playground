@@ -36,23 +36,21 @@ int main()
 
     while (true) {
         cv::UMat src, croppedImg, dst, cdst;
+        // input image and check
         cap >> src;
-
         if (!cap.read(src)) { // if not success, break loop
             cout << "\n Cannot read the video file. \n";
             break;
         }            
-
         // crop input image
         // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
         cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
         cv::UMat croppedRef(src, myROI);
         croppedRef.copyTo(croppedImg);
-
+        // edge detection
         cv::Canny(croppedImg, dst, 50, 200, 3);        
-
         // detected lines
-        std::pair<cv::Point, cv::Point> hough_line_pair_pt;        
+        std::pair<cv::Point, cv::Point> hough_line_pair_pt;
         hough_line_pair_pt = hdtor._standard_hough(dst); 
 
         // prepare the color canvas for output image
