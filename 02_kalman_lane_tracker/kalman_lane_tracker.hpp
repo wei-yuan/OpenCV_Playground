@@ -22,7 +22,7 @@ public:
         //KalmanFilter kf(state_size, meas_size, contr_size);
         //kf.transitionMatrix = ? ;
     }
-    ~KalmanLaneTracker() {}
+    /*
     float _update_dt(float dt)
     {
         for (int i = 0; i < state_size; i++) {
@@ -32,5 +32,6 @@ public:
     float _first_detect() {}
     float update() {}
     float predict() {}
+    */
 };
 # endif

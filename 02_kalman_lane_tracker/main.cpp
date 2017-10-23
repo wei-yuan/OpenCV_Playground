@@ -14,8 +14,8 @@ using namespace std;
 int main()
 {    
     // cap is the object of class video capture that tries to capture video file
-    //VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
-    VideoCapture cap("/home/alex/img_video_file/road_view.mp4");        
+    VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
+    //VideoCapture cap("/home/alex/img_video_file/road_view.mp4");        
 
     if ( !cap.isOpened() )  // isOpened() returns true if capturing has been initialized.
     {
@@ -31,6 +31,8 @@ int main()
     std::time_t timeBegin = std::time(0);
     int tick = 0;
     
+    HoughLaneDetector hdetector(180);
+
     while (1)
     {
         cv::UMat frame;
@@ -42,9 +44,11 @@ int main()
             cout<<"\n Cannot read the video file. \n";
             break;
         }
-
+                    
         // Image Filtering ex. sobel and threshold
         // cv::cvtColor(frame, frameGray, cv::COLOR_BGR2GRAY); 
+        // Hough lane detector
+        hdetector._standard_hough(frame); // draw lines
 
         // Kalman filter for tracking
         
