@@ -11,22 +11,22 @@
 class HoughLaneDetector
 {
 protected:
-    bool  prob_hough;
-    float roi_theta = 0.3;
-    float road_horizon; // degree, ex 180
-    int   vote;
+    bool  _prob_hough;
+    float _roi_theta = 0.3;
+    float _road_horizon; // degree, ex 180
+    int   _vote;
 
 public:
     // constrctor & destructor
     HoughLaneDetector(float intput_road_horizon)
     {
-        prob_hough   = true;
-        roi_theta    = 0.3;
-        road_horizon = intput_road_horizon;
-        vote         = 50;
+        _prob_hough   = true;
+        _roi_theta    = 0.3;
+        _road_horizon = intput_road_horizon;
+        _vote         = 50;
     }
     // Hough Trnasform wrapper to return a series of point
-    std::pair<cv::Point, cv::Point> _standard_hough(cv::UMat& frame /*, int init_vote*/)
+    std::pair<cv::Point, cv::Point> _standard_hough(cv::UMat& frame)
     {
         // input argument of HoughLines(dst, lines, rho, theta, threshold, srn ,stn)
         // -dst: Output of the edge detector
@@ -67,46 +67,70 @@ public:
         float c          = y1 - m * x1;
         float base_cross = -c / m;
 
-        return (width * 0.5) - base_cross;
+        if((x2 - x1) != 0)
+            return (width * 0.5) - base_cross;
+        else
+            std::cout << "denominator of slope m = 0" << std::endl;
     }
-    /*
-    float _scale_line(float x1, float y1, float x2, float y2, float frame_height)
+    
+    std::pair<cv::Point, cv::Point>  _scale_line(float x1, float y1, float x2, float y2, float frame_height)
     {
         float m; // slope value m
-        if (x1 == x2)
+        cv::Point pt1, pt2;
+        
+        if (pt1.x== pt1.x)
         {
-            if (y1 < y2)
+            if (pt1.y < y2)
             {
-                //return x1, x2, y1, y2;
+                pt1.y = _road_horizon;
+                pt2.y = frame_height;
+                return {pt1, pt2};
             }
             else
             {
-                //return x1, x2, y1, y2;
+                pt1.y = frame_height;
+                pt2.y = _road_horizon;                
+                return {pt1, pt2};
             }
         }
-        if (y1 < y2)
+        else
         {
-            if ((x1 - x2) != 0)
-            {
-                m = (y1 - y2) / (x1 - x2);
-            }
-        else // y1 > y2
+            // do nothing
+        }
+        
+        if (pt1.y < y2)
         {
-            if ((x1 - x2) != 0)
+            if ((pt1.x- pt2.x) != 0) // Denominator shouldn't be zero
             {
-                m = (y1 - y2) / (x1 - x2);
+                m = (pt1.y - pt2.y) / (pt1.x - pt2.x);
+                pt1.x = ((_road_horizon-pt1.y)/m) + pt1.x;
+                pt1.y = _road_horizon;
+                pt2.x = ((frame_height-y2)/m) + pt2.x;
+                pt2.y = frame_height;
             }
         }
-        return x1, x2, y1, y2;
+        else // pt1.y > pt2.y
+        {
+            if ((pt1.x- pt2.x) != 0) // Denominator shouldn't be zero
+            {
+                m = (pt1.y - y2) / (pt1.x- pt2.x);
+                pt1.x = ((frame_height-pt1.y)/m) + pt1.x;
+                pt1.y = frame_height;
+                pt2.x = ((_road_horizon-pt2.y)/m) + pt2.x;
+                pt2.y = _road_horizon;
+            }
+        }
+        return {pt1, pt2};
     }
-    float detect(frame)
+    
+    float detect(cv::UMat& frame)
     {
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        int roiy_end = frame.shape[0];
-        int roix_end = frame.shape[1];
+        cv::UMat dst;
+        cv::cvtColor(frame, dst, cv::COLOR_BGR2GRAY);
+        //int roiy_end = frame.shape[0];
+        //int roix_end = frame.shape[1];
         //roi = img[self.road_horizon:roiy_end, 0:roix_end]
 
-    }
-    */
+    }    
 };
 #endif

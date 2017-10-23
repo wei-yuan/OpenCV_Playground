@@ -41,25 +41,24 @@ int main()
         if (!cap.read(src)) { // if not success, break loop
             cout << "\n Cannot read the video file. \n";
             break;
-        }            
+        }
         // crop input image
         // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
         cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
         cv::UMat croppedRef(src, myROI);
         croppedRef.copyTo(croppedImg);
         // edge detection
-        cv::Canny(croppedImg, dst, 50, 200, 3);        
+        cv::Canny(croppedImg, dst, 50, 200, 3);
         // detected lines
         std::pair<cv::Point, cv::Point> hough_line_pair_pt;
-        hough_line_pair_pt = hdtor._standard_hough(dst); 
+        hough_line_pair_pt = hdtor._standard_hough(dst);
 
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
-
-        //for(int i=0 ; i < hough_line_pair_pt.size(); i++)
-            cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, Scalar(0, 0, 255), 3, LINE_AA);        
-        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
-        
+        // draw line
+        cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, Scalar(0, 0, 255), 3, LINE_AA);
+        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;
+        // image check
         cv::imshow("source", src);
         cv::imshow("Frame", cdst);
 
@@ -73,7 +72,6 @@ int main()
             cout << "Frames per second: " << frameCounter << endl;
             frameCounter = 0;
         }
-
         // Press  ESC on keyboard to exit
         char c = (char)waitKey(25);
         if (c == 27) break;
