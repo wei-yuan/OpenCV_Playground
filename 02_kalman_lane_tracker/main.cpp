@@ -8,90 +8,83 @@
 #include "hough_lane_detector.hpp"
 #include "kalman_lane_tracker.hpp"
 
-using namespace cv;
 using namespace std;
 
 int main()
-{    
+{
     // cap is the object of class video capture that tries to capture video file
     VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
-    //VideoCapture cap("/home/alex/img_video_file/road_view.mp4");        
+    // VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
 
-    if ( !cap.isOpened() )  // isOpened() returns true if capturing has been initialized.
+    if (!cap.isOpened()) // isOpened() returns true if capturing has been initialized.
     {
-		cout << "Cannot open the video file. \n";
-		return -1;
+        cout << "Cannot open the video file. \n";
+        return -1;
     }
 
     cout << "Have OpenCL?: " << cv::ocl::haveOpenCL() << endl;
-/*  SWITCH OPENCL ON/OFF IN LINE BELLOW */
-    ocl::setUseOpenCL(true);
-/*                                      */
-    long frameCounter = 0;
-    std::time_t timeBegin = std::time(0);
-    int tick = 0;
-    
-    // Hough
-    int init_vote = 50; // what's this for?
-    HoughLaneDetector hdetector(180);
+    /*  SWITCH OPENCL ON/OFF IN LINE BELLOW */
+    cv::ocl::setUseOpenCL(true);
 
-    while(1)
-    {
-        UMat frame;
-        UMat frameGray;
-        //cv::UMat Thresh;
-        UMat dst;
-        cap >> frame;
-        
-        if (!cap.read(frame)){ // if not success, break loop
-            cout<<"\n Cannot read the video file. \n";
+    long        frameCounter = 0;
+    std::time_t timeBegin    = std::time(0);
+    int         tick         = 0;
+
+    // Hough transform related
+    int               init_vote = 50; // what's this for?
+    HoughLaneDetector hdtor(180);
+
+    while (true) {
+        cv::UMat src, croppedImg, dst, cdst;
+        cap >> src;
+
+        if (!cap.read(src)) { // if not success, break loop
+            cout << "\n Cannot read the video file. \n";
             break;
-        }
-                    
-        // Image Filtering ex. sobel and threshold
-        cv::cvtColor(frame, frameGray, cv::COLOR_BGR2GRAY); 
-        // Hough lane detector                
-        std::vector<Vec2f> lines;
-        
-        HoughLines(frameGray, lines, 1, CV_PI/180, init_vote, 50, 10);
-        
-        for( size_t i = 0; i < lines.size(); i++ )
-        {
-           float rho = lines[i][0], theta = lines[i][1];
-           Point pt1, pt2;
-           double a = cos(theta), b = sin(theta);
-           double x0 = a*rho, y0 = b*rho;
-           pt1.x = cvRound(x0 + 1000*(-b));
-           pt1.y = cvRound(y0 + 1000*(a));
-           pt2.x = cvRound(x0 - 1000*(-b));
-           pt2.y = cvRound(y0 - 1000*(a));
-           line( dst, pt1, pt2, Scalar(0,0,255), 3, LINE_AA);
-        }
+        }            
 
-        //hdetector._standard_hough(frameGray); // draw lines
+        // crop input image
+        // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
+        cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
+        cv::UMat croppedRef(src, myROI);
+        croppedRef.copyTo(croppedImg);
+
+        cv::Canny(croppedImg, dst, 50, 200, 3);        
+
+        // detected lines
+        std::pair<cv::Point, cv::Point> hough_line_pair_pt;        
+        hough_line_pair_pt = hdtor._standard_hough(dst); 
+
+        // prepare the color canvas for output image
+        cv::cvtColor(dst, cdst, CV_GRAY2BGR);
+
+        //for(int i=0 ; i < hough_line_pair_pt.size(); i++)
+            cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, Scalar(0, 0, 255), 3, LINE_AA);        
+        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
+        
+        cv::imshow("source", src);
+        cv::imshow("Frame", cdst);
 
         // Kalman filter for tracking
-        
-        imshow( "Frame", frameGray );
+
+        // Calculate frame per second
         frameCounter++;
-
         std::time_t timeNow = std::time(0) - timeBegin;
-
-        if (timeNow - tick >= 1)
-        {
+        if (timeNow - tick >= 1) {
             tick++;
             cout << "Frames per second: " << frameCounter << endl;
             frameCounter = 0;
-        }        
+        }
+
         // Press  ESC on keyboard to exit
-        char c=(char)waitKey(25);
-        if(c==27)
-            break;
+        char c = (char)waitKey(25);
+        if (c == 27) break;
+        if (waitKey(10) == 32) break;
     }
     // When everything done, release the video capture object
     cap.release();
     // Closes all the frames
     destroyAllWindows();
 
-    return 0;    
+    return 0;
 }
