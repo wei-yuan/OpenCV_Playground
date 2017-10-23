@@ -1,62 +1,69 @@
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <utility>
+#include <vector>
 
-using namespace cv;
 using namespace std;
 
-void help()
+std::pair<cv::Point, cv::Point> polar_to_card(cv::Vec2f line)
 {
-    cout << "\nThis program demonstrates line finding with the Hough transform.\n"
-            "Usage:\n"
-            "./houghlines <image_name>, Default is pic1.jpg\n"
-         << endl;
+    float rho   = line[0];
+    float theta = line[1];
+
+    double x0 = cos(theta) * rho;
+    double y0 = sin(theta) * rho;
+
+    cv::Point pt1, pt2;
+    pt1.x = cvRound(x0 + 1000 * (-sin(theta)));
+    pt1.y = cvRound(y0 + 1000 * (cos(theta)));
+    pt2.x = cvRound(x0 - 1000 * (-sin(theta)));
+    pt2.y = cvRound(y0 - 1000 * (cos(theta)));
+
+    return {pt1, pt2};
 }
 
-int main(int argc, char** argv)
+int main()
 {
-    // const char* filename = argc >= 2 ? argv[1] : "pic1.jpg";
-    const char* filename = "/home/alex504/img_video_file/hough/tri.png";
+    // cap is the object of class video capture that tries to capture video file
+    cv::VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
+    // VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
 
-      Mat src = imread(filename, 0);
-    if (src.empty()) {
-        help();
-        cout << "can not open " << filename << endl;
-        return -1;
+    if (!cap.isOpened()) {
+        cout << "\nCannot open video camera";
+    } else {
+        // CAPTURING FRAMES FROM CAMERA
+        while (true) {
+            cv::UMat src, croppedImg, dst, cdst;
+            cap >> src;
+
+            // crop input image
+            // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin); 
+            cv::Rect myROI(500, 300, 100*4, 100*3);            
+            cv::UMat croppedRef(src, myROI);
+            croppedRef.copyTo(croppedImg);
+            
+            cv::Canny(croppedImg, dst, 50, 200, 3);
+
+            vector<cv::Vec2f> lines;
+            // detect lines
+            cv::HoughLines(dst, lines, 1, CV_PI / 180, 150, 0, 0);
+
+            // prepare the color canvas for output image
+            cv::cvtColor(dst, cdst, CV_GRAY2BGR);
+            // draw lines
+            for (auto& line : lines) {                                
+                auto l = polar_to_card(line);
+                cv::line(cdst, l.first, l.second, cv::Scalar(0, 0, 255), 3, CV_AA);
+                break;
+            }
+
+            cv::imshow("source", src);
+            cv::imshow("detected lines", cdst);
+
+            if (cv::waitKey(10) == 32) break;
+        }
     }
-
-    Mat dst, cdst;
-    Canny(src, dst, 50, 200, 3);
-    cvtColor(dst, cdst, COLOR_GRAY2BGR);
-#if 0
-  vector<Vec2f> lines;
-  HoughLines(dst, lines, 1, CV_PI/180, 100, 0, 0 );
-
-  for( size_t i = 0; i < lines.size(); i++ )
-  {
-     float rho = lines[i][0], theta = lines[i][1];
-     Point pt1, pt2;
-     double a = cos(theta), b = sin(theta);
-     double x0 = a*rho, y0 = b*rho;
-     pt1.x = cvRound(x0 + 1000*(-b));
-     pt1.y = cvRound(y0 + 1000*(a));
-     pt2.x = cvRound(x0 - 1000*(-b));
-     pt2.y = cvRound(y0 - 1000*(a));
-     line( cdst, pt1, pt2, Scalar(0,0,255), 3, LINE_AA);
-  }
-#else
-    vector<Vec4i> lines;
-    HoughLinesP(dst, lines, 1, CV_PI / 180, 50, 50, 10);
-    for (size_t i = 0; i < lines.size(); i++) {
-        Vec4i l = lines[i];
-        line(cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, CV_AA);
-    }
-#endif
-    imshow("source", src);
-    imshow("detected lines", cdst);
-
-    waitKey();
 
     return 0;
 }
