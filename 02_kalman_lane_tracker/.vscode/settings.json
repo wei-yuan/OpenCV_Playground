@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "iostream": "cpp",
-        "ctime": "cpp",
-        "system_error": "cpp",
-        "type_traits": "cpp"
-    }
-}

@@ -1,7 +1,3 @@
-//作者：知乎用户
-//链接：https://www.zhihu.com/question/30315894/answer/154979413
-//来源：知乎
-//著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 {
     "version": "2.0.0",
     "tasks": [
@@ -12,13 +8,16 @@
                 "-g", // 生成和 debug 有关的信息
                 "${workspaceRoot}/main.cpp",
                 "-o", // 指定输出文件名，不加该参数则默认输出a.exe
-                "${workspaceRoot}/kalman_lane_tracker",                 
+                "${workspaceRoot}/main",                 
                 "-Wall", // 开启额外警告
-                //"-static-libgcc", // 静态链接
+                "-static-libgcc", // 静态链接
                 //"-fcolor-diagnostics",
+                "`pkg-config --cflags opencv`",
+                "`pkg-config --libs opencv`",
+                "-L/usr/local/cuda/targets/x86_64-linux/lib",
+                "-I/usr/local/cuda/targets/x86_64-linux/include",
+                "-lOpenCL",
                 "-std=c++11" // c++1z即c++17，C语言最新标准为c11，或根据自己的需要进行修改
-                /*"pkg-config --cflags opencv",
-                "pkg-config --libs opencv"*/
             ], // 编译命令参数
             "type": "shell",
             "group": {

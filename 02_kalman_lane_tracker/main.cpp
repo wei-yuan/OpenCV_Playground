@@ -31,13 +31,16 @@ int main()
     std::time_t timeBegin = std::time(0);
     int tick = 0;
     
+    // Hough
+    int init_vote = 50; // what's this for?
     HoughLaneDetector hdetector(180);
 
-    while (1)
+    while(1)
     {
-        cv::UMat frame;
-        //cv::UMat frameGray;
+        UMat frame;
+        UMat frameGray;
         //cv::UMat Thresh;
+        UMat dst;
         cap >> frame;
         
         if (!cap.read(frame)){ // if not success, break loop
@@ -46,13 +49,30 @@ int main()
         }
                     
         // Image Filtering ex. sobel and threshold
-        // cv::cvtColor(frame, frameGray, cv::COLOR_BGR2GRAY); 
-        // Hough lane detector
-        hdetector._standard_hough(frame); // draw lines
+        cv::cvtColor(frame, frameGray, cv::COLOR_BGR2GRAY); 
+        // Hough lane detector                
+        std::vector<Vec2f> lines;
+        
+        HoughLines(frameGray, lines, 1, CV_PI/180, init_vote, 50, 10);
+        
+        for( size_t i = 0; i < lines.size(); i++ )
+        {
+           float rho = lines[i][0], theta = lines[i][1];
+           Point pt1, pt2;
+           double a = cos(theta), b = sin(theta);
+           double x0 = a*rho, y0 = b*rho;
+           pt1.x = cvRound(x0 + 1000*(-b));
+           pt1.y = cvRound(y0 + 1000*(a));
+           pt2.x = cvRound(x0 - 1000*(-b));
+           pt2.y = cvRound(y0 - 1000*(a));
+           line( dst, pt1, pt2, Scalar(0,0,255), 3, LINE_AA);
+        }
+
+        //hdetector._standard_hough(frameGray); // draw lines
 
         // Kalman filter for tracking
         
-        imshow( "Frame", frame );
+        imshow( "Frame", frameGray );
         frameCounter++;
 
         std::time_t timeNow = std::time(0) - timeBegin;

@@ -26,7 +26,7 @@ class HoughLaneDetector
         road_horizon = intput_road_horizon;
         vote = 50;
     }
-    //
+    // standard hough
     std::vector<std::vector<float>> _standard_hough(cv::UMat & frame/*, int init_vote*/)
     {
         // Hough Trnasform wrapper to return a series of point
@@ -43,7 +43,8 @@ class HoughLaneDetector
         // -threshold: The minimum number of intersections to “detect” a line
         // -srn and -stn: Default parameters to zero. Check OpenCV reference for more info.
         int init_vote = 50; // what's this for?
-        HoughLinesP(frame, lines, 1, CV_PI/180, init_vote, 50, 10);
+        HoughLines(frame, lines, 1, CV_PI/180, init_vote, 50, 10);
+        //HoughLinesP(frame, lines, 1, CV_PI/180, init_vote, 50, 10);
         
         for(size_t i = 0; i < lines.size(); i++)
         {
@@ -64,11 +65,29 @@ class HoughLaneDetector
             
             line( dst, pt1, pt2, Scalar(0,0,255), 3, LINE_AA);
             //vec_points[i].push_back(pts);
+            
+            std::cout << "Line: " << i <<  std::endl;
+            for(int i=0; i < 4; i++)
+            {
+                std::cout << "pts: " << pts[i] <<  std::endl;
+            }            
             vec_points.push_back(pts);
         }        
         return vec_points;
     }
-    // float _base_distance(float x1, float y1, float x2, float y2, float width) {}
+    float _base_distance(float x1, float y1, float x2, float y2, float width) 
+    {
+        if(x2 == x1)
+        {
+            return (width*0.5) - x1;
+        }
+
+        float m = (y2-y1)/(x2-x1);
+        float c = y1 - m*x1;
+        float base_cross = -c/m;
+        
+        return (width*0.5) - base_cross;
+    }
     /*
     float _scale_line(float x1, float y1, float x2, float y2, float frame_height)
     {
