@@ -13,8 +13,8 @@ using namespace std;
 int main()
 {
     // cap is the object of class video capture that tries to capture video file
-    VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
-    // VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
+    // VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
+     VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
 
     if (!cap.isOpened()) // isOpened() returns true if capturing has been initialized.
     {
