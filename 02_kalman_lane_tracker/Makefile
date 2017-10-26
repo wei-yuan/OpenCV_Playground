@@ -16,7 +16,7 @@ LFLAGS=-L$(PREFIX)/lib -I$(PREFIX)/include -lOpenCL
 
 LOCAL_CFLAGS=-Wno-deprecated-declarations
 
-TARGET=lane_detection_and_tracking
+TARGET=main #lane_detection_and_tracking
 
 .PHONY: all clean execute directories
 

@@ -129,8 +129,13 @@ public:
         cv::cvtColor(frame, dst, cv::COLOR_BGR2GRAY);
         //int roiy_end = frame.shape[0];
         //int roix_end = frame.shape[1];
+        // cv::UMat src, croppedImg, dst, cdst;
+        // crop input image
+        // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
+        // cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
+        // cv::UMat croppedRef(src, myROI);
+        // croppedRef.copyTo(croppedImg);
         //roi = img[self.road_horizon:roiy_end, 0:roix_end]
-
     }    
 };
 #endif

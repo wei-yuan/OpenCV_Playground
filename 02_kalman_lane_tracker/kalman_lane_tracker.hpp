@@ -17,6 +17,7 @@ protected:
 public:
     KalmanLaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale, float process_cov_parallel, int proc_noise_type)
     {
+        
         cv::KalmanFilter kf(state_size, meas_size, contr_size);        
         kf.transitionMatrix = cv::Mat::eye(state_size, state_size, CV_32F); // dtype = 32 bit float
         kf.measurementMatrix = cv::Mat::zeros(meas_size, state_size, CV_32F);

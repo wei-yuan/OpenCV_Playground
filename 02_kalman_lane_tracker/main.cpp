@@ -13,8 +13,8 @@ using namespace std;
 int main()
 {
     // cap is the object of class video capture that tries to capture video file
-    // VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
-     VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
+    cv::VideoCapture cap("/home/alex504/img_video_file/kalman/road_view.mp4");
+    // cv::VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
 
     if (!cap.isOpened()) // isOpened() returns true if capturing has been initialized.
     {
@@ -56,7 +56,7 @@ int main()
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
         // draw line
-        cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, Scalar(0, 0, 255), 3, LINE_AA);
+        cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
         cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;
         // image check
         cv::imshow("source", src);
@@ -73,14 +73,14 @@ int main()
             frameCounter = 0;
         }
         // Press  ESC on keyboard to exit
-        char c = (char)waitKey(25);
+        char c = (char)cv::waitKey(25);
         if (c == 27) break;
-        if (waitKey(10) == 32) break;
+        if (cv::waitKey(10) == 32) break;
     }
     // When everything done, release the video capture object
     cap.release();
     // Closes all the frames
-    destroyAllWindows();
+    cv::destroyAllWindows();
 
     return 0;
 }
