@@ -59,10 +59,11 @@ int main()
         cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
         cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;
         // image check
-        cv::imshow("source", src);
-        cv::imshow("Frame", cdst);
+//        cv::imshow("source", src);
+//        cv::imshow("Frame", cdst);
 
         // Kalman filter for tracking
+        KalmanLaneTracker KTracker(2, 0.1, 500);
 
         // Calculate frame per second
         frameCounter++;
