@@ -81,34 +81,37 @@ public:
         _first_detected = false;
     }
     
-    float _update_dt(cv::KalmanFilter& kf, float dt)
+    void _update_dt(cv::KalmanFilter& kf, float dt)
     {
         for (int i = 0; i < _state_size; i+=2) {
             kf.transitionMatrix.at<float>(i, i+1) = dt;
         }
     }
     // Mat state is defined in constructor
-    float _first_detect(cv::KalmanFilter& kf, cv::Mat& state, int lanes)
+/*    float _first_detect(cv::KalmanFilter& kf, cv::Mat& state, 
+                    std::pair< std::pair<cv::Point, cv::Point> left_bound, 
+                                std::pair<cv::Point, cv::Point> right_bound > lane_pt;)
     {
-        /*for l, i in zip(lanes, range(0, _state_size, 8)):
-            kf.state[i:i+8:2, 0] = l */
+        for lane, i in zip(lanes, range(0, _state_size, 8)): // lanes -> (x1, y1) and (x2, y2)
+            kf.state[i:i+8:2, 0] = lane
         
         kf.statePost = state;
         _first_detected = true;
     }
-/*    float update(int lanes)
+*/    
+    void update(cv::KalmanFilter& kf, cv::Mat& meas,int lanes)
     {
-        if(first_detected) // if first_detected = true
-        {
-            for l, i in zip(lanes, range(0, self.meas_size, 4))
+        if(_first_detected) // if first_detected = true
+        {            
+/*            for lane, i in zip(lanes, range(0, self.meas_size, 4))
             {
-                if(l != NULL)
-                    meas[i:i+4, 0] = l;
-            }
+                if(lane != NULL)
+                    meas[i:i+4, 0] = lane;
+            }*/
             kf.correct(meas);
         }
     }
-    float predict(float dt)
+/*    float predict(float dt)
     {
         if(first_detected)
         {

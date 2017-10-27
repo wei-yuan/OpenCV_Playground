@@ -31,16 +31,17 @@ int main()
     int         tick         = 0;
 
     // Hough transform related
-    int               init_vote = 50; // what's this for?
-    HoughLaneDetector hdtor(180);
+    float             init_vote = 150; // what's this for?
+    bool prob_hough = true;
+    HoughLaneDetector hdtor(180, prob_hough);
 
-    while (true) {
+//    while (true) {
         cv::UMat src, croppedImg, dst, cdst;
         // input image and check
         cap >> src;
         if (!cap.read(src)) { // if not success, break loop
             cout << "\n Cannot read the video file. \n";
-            break;
+//            break;
         }
         // crop input image
         // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
@@ -51,7 +52,7 @@ int main()
         cv::Canny(croppedImg, dst, 50, 200, 3);
         // detected lines
         std::pair<cv::Point, cv::Point> hough_line_pair_pt;
-        hough_line_pair_pt = hdtor._standard_hough(dst);
+        hough_line_pair_pt = hdtor._standard_hough(dst, init_vote);
 
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
@@ -60,7 +61,7 @@ int main()
         cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;
         // image check
 //        cv::imshow("source", src);
-//        cv::imshow("Frame", cdst);
+        cv::imshow("Frame", cdst);
 
         // Kalman filter for tracking
         KalmanLaneTracker KTracker(2, 0.1, 500);
@@ -75,9 +76,10 @@ int main()
         }
         // Press  ESC on keyboard to exit
         char c = (char)cv::waitKey(25);
-        if (c == 27) break;
-        if (cv::waitKey(10) == 32) break;
-    }
+//        if (c == 27) break;
+//        if (cv::waitKey(10) == 32) break;
+        cv::waitKey();
+//    }
     // When everything done, release the video capture object
     cap.release();
     // Closes all the frames
