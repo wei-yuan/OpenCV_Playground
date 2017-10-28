@@ -34,7 +34,7 @@ public:
         kf.transitionMatrix  = cv::Mat::eye(_state_size, _state_size, CV_32F); // dtype = 32 bit float
         kf.measurementMatrix = cv::Mat::zeros(_meas_size, _state_size, CV_32F);
 
-        for (int i = 0; i < sizeof(_meas_size); i++) {
+        for (int i = 0; i < _meas_size; i++) {
             kf.measurementMatrix.at<float>(i, i * 2) = 1; // access point (i, i*2) and assign it to 1;
         }
 
@@ -63,9 +63,7 @@ public:
         for (int i = 0; i < _meas_size; i += 2) 
         {
             for (int j = 1; j < _n_lanes; j++) // 1 ???
-            {
-                std::cout << "(x, y)" << "(" << i << "," << i+(j*8) << ")" << std::endl;
-                std::cout << "(x, y)" << "(" << i+(j*8) << "," << i << ")" << std::endl;
+            {                
                 kf.processNoiseCov.at<float>(i, i+(j*8)) = process_cov_parallel; 
                 kf.processNoiseCov.at<float>(i+(j*8), i) = process_cov_parallel;                 
             }

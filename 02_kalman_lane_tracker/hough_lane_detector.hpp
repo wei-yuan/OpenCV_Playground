@@ -23,9 +23,9 @@ protected:
 
 public:
     // constrctor & destructor
-    HoughLaneDetector(float intput_road_horizon, bool prob_hough = true)
+    HoughLaneDetector(float intput_road_horizon)
     {
-        bool  _prob_hough   = prob_hough;
+        bool  _prob_hough   = true;
         float _roi_theta    = 0.3;
         float _road_horizon = intput_road_horizon;
         float _vote         = 150;
@@ -41,8 +41,8 @@ public:
         // -threshold: The minimum number of intersections to “detect” a line
         // -srn and -stn: Default parameters to zero. Check OpenCV reference for more info.
         float                  init_vote = initial_vote; // 150, but what's this for?
-        std::vector<cv::Vec2f> lines;
-        HoughLines(frame, lines, 1, CV_PI / 180, init_vote, 0, 0);
+        std::vector<cv::Vec2f> lines;                
+        cv::HoughLines(frame, lines, 1, CV_PI / 180, init_vote, 0, 0);
 
         cv::Point pt1, pt2;
         auto      l = {pt1, pt2};
@@ -59,6 +59,8 @@ public:
             pt2.x = cvRound(x0 - 1000 * (-sin(theta)));
             pt2.y = cvRound(y0 - 1000 * (cos(theta)));
         }
+        std::cout << "Member function _standard_hough(). first point: "<< pt1 
+        <<  ", second point: "<< pt2 << std::endl;
         return {pt1, pt2};
     }
 
@@ -72,10 +74,13 @@ public:
         float c          = y1 - m * x1;
         float base_cross = -c / m;
 
-        if ((x2 - x1) != 0)
+        if ((x2 - x1) != 0){
             return (width * 0.5) - base_cross;
+        }            
         else
-            std::cout << "denominator of slope m = 0" << std::endl;
+        {
+            // do nothing
+        }            
     }
 
     std::pair<cv::Point, cv::Point> _scale_line(float x1, float y1, float x2, float y2, float frame_height)
@@ -122,7 +127,9 @@ public:
 
     void detect(cv::UMat& frame)
     {
-        cv::UMat gray, croppedImg, blur, contour;
+        std::cout << "HoughLaneDetector detect" << std::endl;        
+        
+        cv::UMat gray, croppedImg, dst, cdst, blur, contour;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
         // w = frame.shape[0], h = frame.shape[1]
         int roiy_end = frame.rows;
@@ -130,32 +137,66 @@ public:
 
         // crop input image
         // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
-        cv::Rect roi(_road_horizon, 0, (roiy_end - _road_horizon), (roix_end - 0));
+        cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
+        cv::UMat croppedRef(frame, myROI);
+        croppedRef.copyTo(croppedImg);
+        // edge detection
+        cv::Canny(croppedImg, dst, 50, 200, 3);
+        std::cout << "Canny" << std::endl;
+
+/*        cv::Rect roi(_road_horizon, 0, (roiy_end - _road_horizon), (roix_end - 0));
         cv::UMat croppedRef(gray, roi);
         croppedRef.copyTo(croppedImg);
         // blurring
         int ksize = 5;
         medianBlur(croppedImg, blur, ksize);
         // edge detection
-        cv::Canny(blur, contour, 60, 120);
-        
-        cv::imshow("Canny in class", contour);
-
+        cv::Canny(blur, contour, 60, 120);                
+        cv::imshow("Canny in class", contour);        
+*/        
         std::vector<cv::Vec2f> lines;
-        std::pair<cv::Point, cv::Point> houghlines;
-        //std::vector<cv::Vec8f> left_bound;
+        std::vector<cv::Vec4f> plines;
+        std::pair<cv::Point, cv::Point> houghlines;                
+        
+        _prob_hough = true;        
         if (_prob_hough) // true
-        {
+        {            
+            std::cout << "_prob_hough: " << _prob_hough << std::endl;
             // void HoughLinesP(InputArray image, OutputArray lines, 
             //                  double rho, double theta, int threshold, 
             //                  double minLineLength=0, double maxLineGap=0)
-            // type of lines = std::vector<cv::Vec2f>
-            cv::HoughLinesP(contour, lines, 1, CV_PI / 180, _vote, 30, 100);
+            // type of lines = std::vector<cv::Vec2f>, i.e. vector with 2 float .element            
+            cv::HoughLinesP(contour, plines, 1, CV_PI / 180, _vote, 30, 100);
+           
+            cv::Point pt1, pt2;
+            auto      l = {pt1, pt2};
+    
+            for (auto& line : lines) {
+                float rho   = line[0];
+                float theta = line[1];
+    
+                double x0 = cos(theta) * rho;
+                double y0 = sin(theta) * rho;
+    
+                pt1.x = cvRound(x0 + 1000 * (-sin(theta)));
+                pt1.y = cvRound(y0 + 1000 * (cos(theta)));
+                pt2.x = cvRound(x0 - 1000 * (-sin(theta)));
+                pt2.y = cvRound(y0 - 1000 * (cos(theta)));                
+            }
+            cv::cvtColor(dst, cdst, CV_GRAY2BGR);
+            // draw line
+            cv::line(cdst, houghlines.first, houghlines.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+            std::cout << houghlines.first << houghlines.second << std::endl;
+            // generate line with std::pair<cv::Point, cv::Point> format
+            std::cout << "class member function detect. first point: "<< pt1 
+            <<  ", second point: "<< pt2 << std::endl;
+            cv::imshow("line using HoughLineP", cdst);
+            cv::waitKey();
         } 
         else 
         {
-            // self defined function, rerun std::pair<cv::Point, cv::Point>
-            houghlines = _standard_hough(contour, _vote);
+            // self defined function, return std::pair<cv::Point, cv::Point>
+            houghlines = _standard_hough(dst, _vote);
         }
 
         //     
@@ -163,7 +204,7 @@ public:
         {
             auto l = {pt1, pt2};
             for(auto& line : lines) {
-                
+
             }
         }
         else
@@ -172,7 +213,7 @@ public:
         }*/
         
 
-//        return ;
+//        return {left_bound, right_bound};
     }
 };
 #endif

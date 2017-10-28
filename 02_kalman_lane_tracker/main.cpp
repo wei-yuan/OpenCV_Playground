@@ -31,9 +31,11 @@ int main()
     int         tick         = 0;
 
     // Hough transform related
-    float             init_vote = 150; // what's this for?
-    bool prob_hough = true;
-    HoughLaneDetector hdtor(180, prob_hough);
+    float             init_vote = 150; // what's this for?    
+    HoughLaneDetector hdetector(180); // road horizon: 180 degree 
+
+    // Kalman filter for tracking
+    //KalmanLaneTracker KTracker(2, 0.1, 500);    
 
 //    while (true) {
         cv::UMat src, croppedImg, dst, cdst;
@@ -52,19 +54,19 @@ int main()
         cv::Canny(croppedImg, dst, 50, 200, 3);
         // detected lines
         std::pair<cv::Point, cv::Point> hough_line_pair_pt;
-        hough_line_pair_pt = hdtor._standard_hough(dst, init_vote);
+        hough_line_pair_pt = hdetector._standard_hough(dst, init_vote);        
+
+        hdetector.detect(src);
 
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
         // draw line
         cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
-        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;
+        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
+        
         // image check
-//        cv::imshow("source", src);
-        cv::imshow("Frame", cdst);
-
-        // Kalman filter for tracking
-        KalmanLaneTracker KTracker(2, 0.1, 500);
+        cv::imshow("source", src);
+        cv::imshow("Frame", cdst);        
 
         // Calculate frame per second
         frameCounter++;
@@ -75,7 +77,7 @@ int main()
             frameCounter = 0;
         }
         // Press  ESC on keyboard to exit
-        char c = (char)cv::waitKey(25);
+//        char c = (char)cv::waitKey(25);
 //        if (c == 27) break;
 //        if (cv::waitKey(10) == 32) break;
         cv::waitKey();
