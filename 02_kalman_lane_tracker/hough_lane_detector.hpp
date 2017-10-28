@@ -141,19 +141,17 @@ public:
         cv::UMat croppedRef(frame, myROI);
         croppedRef.copyTo(croppedImg);
         // edge detection
-        cv::Canny(croppedImg, dst, 50, 200, 3);
-        std::cout << "Canny" << std::endl;
-
-/*        cv::Rect roi(_road_horizon, 0, (roiy_end - _road_horizon), (roix_end - 0));
+/*        cv::Canny(croppedImg, dst, 50, 200, 3);        
+        cv::Rect roi(_road_horizon, 0, (roiy_end - _road_horizon), (roix_end - 0));
         cv::UMat croppedRef(gray, roi);
         croppedRef.copyTo(croppedImg);
+*/        
         // blurring
         int ksize = 5;
         medianBlur(croppedImg, blur, ksize);
         // edge detection
-        cv::Canny(blur, contour, 60, 120);                
-        cv::imshow("Canny in class", contour);        
-*/        
+        cv::Canny(blur, contour, 60, 120);                        
+        
         std::vector<cv::Vec2f> lines;
         std::vector<cv::Vec4f> plines;
         std::pair<cv::Point, cv::Point> houghlines;                
@@ -165,13 +163,13 @@ public:
             // void HoughLinesP(InputArray image, OutputArray lines, 
             //                  double rho, double theta, int threshold, 
             //                  double minLineLength=0, double maxLineGap=0)
-            // type of lines = std::vector<cv::Vec2f>, i.e. vector with 2 float .element            
+            // type of lines = std::vector<cv::Vec4f>, i.e. vector with 4 float element            
             cv::HoughLinesP(contour, plines, 1, CV_PI / 180, _vote, 30, 100);
            
             cv::Point pt1, pt2;
             auto      l = {pt1, pt2};
     
-            for (auto& line : lines) {
+            for (auto& line : plines) {
                 float rho   = line[0];
                 float theta = line[1];
     
@@ -183,10 +181,12 @@ public:
                 pt2.x = cvRound(x0 - 1000 * (-sin(theta)));
                 pt2.y = cvRound(y0 - 1000 * (cos(theta)));                
             }
-            cv::cvtColor(dst, cdst, CV_GRAY2BGR);
+            
+            // prepare the color canvas for output image 
+            cv::cvtColor(contour, cdst, CV_GRAY2BGR);            
             // draw line
-            cv::line(cdst, houghlines.first, houghlines.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
-            std::cout << houghlines.first << houghlines.second << std::endl;
+            houghlines = {pt1, pt2};
+            cv::line(cdst, houghlines.first, houghlines.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);                        
             // generate line with std::pair<cv::Point, cv::Point> format
             std::cout << "class member function detect. first point: "<< pt1 
             <<  ", second point: "<< pt2 << std::endl;
@@ -198,7 +198,6 @@ public:
             // self defined function, return std::pair<cv::Point, cv::Point>
             houghlines = _standard_hough(dst, _vote);
         }
-
         //     
         /*if(houghlines)
         {

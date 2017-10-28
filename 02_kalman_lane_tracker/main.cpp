@@ -61,7 +61,8 @@ int main()
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
         // draw line
-        cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+        cv::line(cdst, {-559, -839}, {753, 671}, cvScalar(0, 0, 255), 3, cv::LINE_AA);        
+        //cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
         cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
         
         // image check
