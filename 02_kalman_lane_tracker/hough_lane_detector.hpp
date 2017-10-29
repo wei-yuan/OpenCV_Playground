@@ -1,18 +1,17 @@
 #ifndef HOUGH_LANE_DETECTOR_H
 #define HOUGH_LANE_DETECTOR_H
 
-#include <math.h>       /* atan2 */
-#include <vector>
-#include <utility>
-#include <iostream>
+// cpp header
 #include <exception>
+#include <iostream>
+#include <math.h>    /* atan2 */
+#include <tuple>
+#include <utility>
+#include <vector>
+// OpenCV header
 #include "opencv2/highgui.hpp"
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-
-class my_logic_exception: public std::exception
-{    
-};
 
 class HoughLaneDetector
 {
@@ -84,53 +83,108 @@ public:
         }            
     }
 
-    std::pair<cv::Point, cv::Point> _scale_line(float x1, float y1, float x2, float y2, float frame_height)
+    std::vector<cv::Vec4f> _Vec4f_copy_to_2dvector(std::vector<cv::Vec4f>& one_side_of_lane_bound, std::vector<std::vector<float>>& lane_pair_point)
     {
-        float     m; // slope value m
-        cv::Point pt1, pt2;
-        // assignment
-        pt1.x = x1; pt1.y = y1;
-        pt2.x = x2; pt2.y = y2;
-
-        if (pt1.x == pt1.x) {
-            if (pt1.y < y2) {
-                pt1.y = _road_horizon;
-                pt2.y = frame_height;
-                return {pt1, pt2};
-            } else {
-                pt1.y = frame_height;
-                pt2.y = _road_horizon;
-                return {pt1, pt2};
+        // copy value back for return
+        for (size_t i = 0; i < one_side_of_lane_bound.size(); i++) 
+        {
+            for (int j = 0; j < 4; j++) 
+            {
+                one_side_of_lane_bound[j] = lane_pair_point[i][j];
             }
-        } else {
+        }
+        return one_side_of_lane_bound;
+    }
+
+    std::vector<cv::Vec4f> _scale_line(std::vector<cv::Vec4f>& one_side_of_lane_bound, float frame_height)
+    {
+        std::cout << "_scale_line" << std:: endl;
+        float m; // slope value m
+        // x1: one_side_of_lane_bound[0], y1: one_side_of_lane_bound[1]
+        // x2: one_side_of_lane_bound[2], y2: one_side_of_lane_bound[3]        
+        
+        std::vector<std::vector<float>> lane_pair_point(1, std::vector<float>(4));        
+        // copy Vec4f value for comparing
+        for(size_t i=0; i < one_side_of_lane_bound.size(); i++)
+        {    
+            const cv::Vec4f& one = one_side_of_lane_bound[i];        
+            for(int j=0; j<4; j++)
+            {                
+                lane_pair_point[i][j] = one[j];            
+            }            
+        }
+
+        // convert, for readable
+        float x1, y1, x2, y2;
+        x1 = lane_pair_point[0][0]; y1 = lane_pair_point[0][1];
+        x2 = lane_pair_point[0][2]; y2 = lane_pair_point[0][3];
+
+        if (x1 == x2) {
+            if (y1 < y2) {
+                lane_pair_point[0][1] = _road_horizon;
+                lane_pair_point[0][3] = frame_height;                
+                one_side_of_lane_bound = _Vec4f_copy_to_2dvector(one_side_of_lane_bound, lane_pair_point);
+
+                for (int j = 0; j < 4; j++) 
+                {
+                    std::cout << "x1 == x2, y1 < y2" << one_side_of_lane_bound[j] << std:: endl; 
+                }
+
+                return one_side_of_lane_bound;
+            } 
+            else 
+            {
+                lane_pair_point[0][1] = frame_height;
+                lane_pair_point[0][3] = _road_horizon;
+                one_side_of_lane_bound = _Vec4f_copy_to_2dvector(one_side_of_lane_bound, lane_pair_point);
+                
+                for (int j = 0; j < 4; j++) 
+                {
+                    std::cout << "x1 == x2, y1 > y2" << one_side_of_lane_bound[j] << std:: endl; 
+                }
+
+                return one_side_of_lane_bound;
+            }
+        } 
+        else 
+        {
             // do nothing
         }
 
-        if (pt1.y < y2) {
-            if ((pt1.x - pt2.x) != 0) // Denominator shouldn't be zero
-            {
-                m     = (pt1.y - pt2.y) / (pt1.x - pt2.x);
-                pt1.x = ((_road_horizon - pt1.y) / m) + pt1.x;
-                pt1.y = _road_horizon;
-                pt2.x = ((frame_height - y2) / m) + pt2.x;
-                pt2.y = frame_height;
-            }
-        } else // pt1.y > pt2.y
+        if (y1 < y2) 
         {
-            if ((pt1.x - pt2.x) != 0) // Denominator shouldn't be zero
+            if ((x1 - x2) != 0) // Denominator shouldn't be zero
             {
-                m     = (pt1.y - y2) / (pt1.x - pt2.x);
-                pt1.x = ((frame_height - pt1.y) / m) + pt1.x;
-                pt1.y = frame_height;
-                pt2.x = ((_road_horizon - pt2.y) / m) + pt2.x;
-                pt2.y = _road_horizon;
+                m     = (y1 - y2) / (x1 - x2);
+                lane_pair_point[0][0] = ((_road_horizon - y1) / m) + x1; //x1
+                lane_pair_point[0][1] = _road_horizon;                   //y1
+                lane_pair_point[0][2] = ((frame_height - y2) / m) + x2;  //x2
+                lane_pair_point[0][3] = frame_height;                    //y2 
+            }
+        } 
+        else // y1 > y2
+        {
+            if ((x1 - x2) != 0) // Denominator shouldn't be zero
+            {
+                m     = (y1 - y2) / (x1 - x2);
+                lane_pair_point[0][0] = ((frame_height - y1) / m) + x1;
+                lane_pair_point[0][1] = frame_height;
+                lane_pair_point[0][2] = ((_road_horizon - y2) / m) + x2;
+                lane_pair_point[0][3] = _road_horizon;
             }
         }
-        return {pt1, pt2};
+        // copy to lane(Vec4f)
+        one_side_of_lane_bound = _Vec4f_copy_to_2dvector(one_side_of_lane_bound, lane_pair_point);
+
+        for (int j = 0; j < 4; j++) 
+        {
+            std::cout << one_side_of_lane_bound[j] << std:: endl; 
+        }
+
+        return one_side_of_lane_bound;
     }
 
-    std::pair<std::vector<cv::Vec4f>, std::vector<cv::Vec4f>>
-    detect(cv::UMat& frame)
+    std::pair<std::vector<cv::Vec4f>, std::vector<cv::Vec4f>> detect(cv::UMat& frame)
     {                
         cv::UMat gray, croppedImg, dst, cdst, blur, contour;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -154,7 +208,8 @@ public:
         std::vector<cv::Vec4f> plines;
         std::pair<cv::Point, cv::Point> houghlines;                
         
-        _prob_hough = true;        
+        /* switch HoughlineP() or Houghline() here */
+        //_prob_hough = true;        
         if (_prob_hough) // true
         {                        
             // void HoughLinesP(InputArray image, OutputArray lines, 
@@ -196,63 +251,70 @@ public:
             houghlines = _standard_hough(dst, _vote);
         } 
         
-        // find nearest lines to center
+        // !!find nearest lines to center!!
 //        lines = lines+np.array([0, self.road_horizon, 0, self.road_horizon]).reshape((1, 1, 4))
         // scale points from ROI coordinates to full frame coordinates
-        std::vector<cv::Vec4f> left_bound, right_bound;
+        std::vector<cv::Vec4f> left_bound, right_bound, scale_pair_left, scale_pair_right;
         // find the rightmost line of the left half of the frame
         // and the leftmost line of the right half
-        cv::Point pt1, pt2;        
+            
         float theta, left_dist, right_dist;
         for (auto& line : plines)
         {
-            theta = std::abs(atan2((pt2.y - pt1.y), (pt2.x-pt1.x)));
+            theta = std::abs(atan2((houghlines.second.y - houghlines.first.y), (houghlines.second.x-houghlines.first.x)));
             if (theta > _roi_theta)
             {
-                float dist = _base_distance(pt1.x, pt1.y, pt2.x, pt2.y, frame.cols);
+                float dist = _base_distance(houghlines.first.x, houghlines.first.y, houghlines.second.x, houghlines.second.y, frame.cols);
                 if(dist < 0)
                 {
-                    left_bound[0] = pt1.x;
-                    left_bound[1] = pt1.y;
-                    left_bound[2] = pt2.x;
-                    left_bound[3] = pt2.y;
+                    left_bound[0] = houghlines.first.x;
+                    left_bound[1] = houghlines.first.y;
+                    left_bound[2] = houghlines.second.x;
+                    left_bound[3] = houghlines.second.y;
                     left_dist = dist;
                 }
                 else if(dist > 0)
                 {
-                    right_bound[0] = pt1.x;
-                    right_bound[1] = pt1.y;
-                    right_bound[2] = pt2.x;
-                    right_bound[3] = pt2.y;
+                    right_bound[0] = houghlines.first.x;
+                    right_bound[1] = houghlines.first.y;
+                    right_bound[2] = houghlines.second.x;
+                    right_bound[3] = houghlines.second.y;
                     right_dist = dist;
                 }
                 else if(0 > dist > left_dist)
                 {
-                    left_bound[0] = pt1.x;
-                    left_bound[1] = pt1.y;
-                    left_bound[2] = pt2.x;
-                    left_bound[3] = pt2.y;
+                    left_bound[0] = houghlines.first.x;
+                    left_bound[1] = houghlines.first.y;
+                    left_bound[2] = houghlines.second.x;
+                    left_bound[3] = houghlines.second.y;
                     left_dist = dist;
                 }
                 else if(0 > dist > right_dist)
                 {
-                    right_bound[0] = pt1.x;
-                    right_bound[1] = pt1.y;
-                    right_bound[2] = pt2.x;
-                    right_bound[3] = pt2.y;
+                    right_bound[0] = houghlines.first.x;
+                    right_bound[1] = houghlines.first.y;
+                    right_bound[2] = houghlines.second.x;
+                    right_bound[3] = houghlines.second.y;
                     right_dist = dist;
                 }
             }
         }    
-        // _scale_line return std::pair<cv::Point, cv::Point>
-        // if left_bound != NULL
-        std::pair<cv::Point, cv::Point> scale_pair_left, scale_pair_right;
         
-        //scale_pair_left = _scale_line(left_bound[0], left_bound[1], left_bound[2], left_bound[3], frame.rows);
-        //scale_pair_right = _scale_line(right_bound[0], right_bound[1], right_bound[2], right_bound[3], frame.rows);
-        // conversion here
+        for (int j = 0; j < 4; j++) 
+        {
+            std::cout << "left_bound[" << j << "]: " << left_bound[j] << std:: endl; 
+        }
 
-        return {left_bound, right_bound};
-    }
+        // _scale_line return std::pair<cv::Point, cv::Point>
+        scale_pair_left  = _scale_line(left_bound, frame.rows);
+        scale_pair_right = _scale_line(right_bound, frame.rows);
+
+        return {scale_pair_left, scale_pair_right};
+    }    
+};
+
+// Exception
+class my_logic_exception: public std::exception
+{    
 };
 #endif
