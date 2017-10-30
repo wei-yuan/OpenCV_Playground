@@ -7,6 +7,8 @@
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+#include "hough_lane_detector.hpp"
+
 // performance boost: Matrix access
 class KalmanLaneTracker
 {
@@ -86,20 +88,22 @@ public:
         }
     }
     // Mat state is defined in constructor
-/*    float _first_detect(cv::KalmanFilter& kf, cv::Mat& state, 
-                    std::pair< std::pair<cv::Point, cv::Point> left_bound, 
-                                std::pair<cv::Point, cv::Point> right_bound > lane_pt;)
+    float _first_detect(cv::KalmanFilter& kf, std::vector<my::Line> lines)
     {
+        for(auto& l : lines)
+        {
+            kf.state[i:i+8:2, 0] = l;
+        }
         for lane, i in zip(lanes, range(0, _state_size, 8)): // lanes -> (x1, y1) and (x2, y2)
-            kf.state[i:i+8:2, 0] = lane
+            
         
         kf.statePost = state;
         _first_detected = true;
     }
-*/    
-    void update(cv::KalmanFilter& kf, cv::Mat& meas,int lanes)
+    
+    void update(cv::KalmanFilter& kf, cv::Mat& meas, int lanes)
     {
-        if(_first_detected) // if first_detected = true
+        if(_first_detected == true ) 
         {            
 /*            for lane, i in zip(lanes, range(0, self.meas_size, 4))
             {
@@ -109,22 +113,22 @@ public:
             kf.correct(meas);
         }
     }
-/*    float predict(float dt)
+    float predict(float dt)
     {
-        if(first_detected)
+        if(_first_detected)
         {
-            _update_dt(dt);
+/*            _update_dt(dt);
             state = kf.predict();
             std::vector<cv::Vec2f> lines;
             for i in range(0, len(state), 8):
                 lanes.append((state[i], state[i+2], state[i+4], state[i+6]))
             return lanes
+*/            
         }
         else
         {
             return NULL;
-        }
-    }
-    */
+        }        
+    }    
 };
 #endif

@@ -22,7 +22,7 @@ all	:	directories $(TARGET)
 
 $(TARGET)	:	$(OBJS)
 	@echo "  LINK  $@"
-	@$(CXX) $^ -o $@ $(CFLAGS) $(LFLAGS) $(LOCAL_CFLAGS)
+	@$(CXX) $^ -o $@ $(CFLAGS) $(LIBS) $(LFLAGS) $(LOCAL_CFLAGS)
 
 objs/%.o	:	%.cpp
 	@echo "  CXX    $@"

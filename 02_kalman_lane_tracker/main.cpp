@@ -33,6 +33,7 @@ int main()
     // Hough transform related
     float             init_vote = 150; // what's this for?    
     HoughLaneDetector hdetector(180); // road horizon: 180 degree 
+    std::pair<std::vector<cv::Vec4f>, std::vector<cv::Vec4f>> lane_line;
 
     // Kalman filter for tracking
     //KalmanLaneTracker KTracker(2, 0.1, 500);    
@@ -53,20 +54,43 @@ int main()
         // edge detection
         cv::Canny(croppedImg, dst, 50, 200, 3);
         // detected lines
+        /* Test code */
+/*        
         std::pair<cv::Point, cv::Point> hough_line_pair_pt;
         hough_line_pair_pt = hdetector._standard_hough(dst, init_vote);        
-
-        hdetector.detect(src);
+*/
+        //cv::imshow("Canny", dst);
+        //lane_line = hdetector.detect(croppedImg);
+        hdetector.detect(croppedImg);
 
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
         // draw line
-        //cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
-        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
+        // unpack into two original lanes
+/*
+        std::vector<cv::Vec4f> left_lane, right_lane, line_left_lane, line_right_lane;
+        std::tie( left_lane, right_lane) = lane_line;
+        std::vector<std::vector<float>> lane_pair_point(1, std::vector<float>(4));
+        cv::Vec4f vec1;
+        left_lane[0][0];
+        for(int i=0;i<4;i++)
+        {
+
+        }
+        // copy value back for return        
+        cv::Point pt1, pt2;
+        */
+
+/*        for(auto& lane: lane_line)
+        {
+            cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+        }
+*/        
+//        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
         
         // image check
         cv::imshow("source", src);
-        cv::imshow("Frame", cdst);        
+        //cv::imshow("Frame", cdst);        
 
         // Calculate frame per second
         frameCounter++;

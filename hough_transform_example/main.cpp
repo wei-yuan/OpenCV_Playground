@@ -6,7 +6,8 @@
 
 using namespace std;
 
-std::pair<cv::Point, cv::Point> polar_to_card(cv::Vec2f line)
+// polar coordinate system to cartisian coordinate system
+std::pair<cv::Point, cv::Point> polar_to_cart(cv::Vec2f line)
 {
     float rho   = line[0];
     float theta = line[1];
@@ -53,7 +54,7 @@ int main()
             cv::cvtColor(dst, cdst, CV_GRAY2BGR);
             // draw lines
             for (auto& line : lines) {                                
-                auto l = polar_to_card(line);
+                auto l = polar_to_cart(line);
                 cv::line(cdst, l.first, l.second, cv::Scalar(0, 0, 255), 3, CV_AA);
                 break;
             }
