@@ -22,29 +22,29 @@
 
 namespace my
 {
-class Line
-{
-public:
-    Line() {}
-    Line(cv::Point beg, cv::Point end)
+    class Line
     {
-        this->beg = beg;
-        this->end = end;
-    }
+    public:
+        Line() {}
+        Line(cv::Point beg, cv::Point end)
+        {
+            this->beg = beg;
+            this->end = end;
+        }
 
-    void swap()
-    {
-        cv::Point tmp = beg;
-        beg           = end;
-        end           = tmp;
-    }
+        void swap()
+        {
+            cv::Point tmp = beg;
+            beg           = end;
+            end           = tmp;
+        }
 
-    inline bool operator==(const Line& rhs) { return *this == rhs; }
-    inline bool operator!=(const Line& rhs) { return *this != rhs; }
+        inline bool operator==(const Line& rhs) { return *this == rhs; }
+        inline bool operator!=(const Line& rhs) { return *this != rhs; }
 
-    cv::Point beg = {};
-    cv::Point end = {};
-};
+        cv::Point beg = {};
+        cv::Point end = {};
+    };
 }
 
 class HoughLaneDetector
@@ -231,10 +231,5 @@ private:
 
         return line;
     }
-};
-
-// Exception
-class my_logic_exception : public std::exception
-{
 };
 #endif

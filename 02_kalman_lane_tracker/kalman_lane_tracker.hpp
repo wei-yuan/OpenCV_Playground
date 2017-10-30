@@ -13,30 +13,32 @@
 class KalmanLaneTracker
 {
 protected:
-    int  _n_lanes;
-    int  _meas_size;
-    int  _state_size;
-    int  _contr_size = 0;
-    bool _first_detected;
+    int  n_lanes;
+    int  meas_size;
+    int  state_size;
+    int  contr_size = 0;
+    bool first_detected;
+    //cv::KalmanFilter kf;
+    //cv::Mat meas, state;
 
 public:
     // constructor
-    KalmanLaneTracker(int _n_lanes, float proc_noise_scale, float meas_noise_scale)
+    KalmanLaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale)
     {
         float process_cov_parallel = 0;
         char  proc_noise_type[]    = "white";
-        _meas_size                 = 4 * _n_lanes;
-        _state_size                = 2 * _meas_size;
+        this->meas_size            = 4 * this->n_lanes;
+        this->state_size           = 2 * this->meas_size;
 
-        std::cout << "n_lanes: " << _n_lanes << ", meas_size: " << _meas_size << ", state_size: " << _state_size
-                  << ", _contr_size: " << _contr_size << std::endl;
+        std::cout << "n_lanes: " << n_lanes << ", meas_size: " << meas_size << ", state_size: " << state_size
+                  << ", _contr_size: " << contr_size << std::endl;
 
-        cv::KalmanFilter kf(_state_size, _meas_size, _contr_size);
+        cv::KalmanFilter kf(this->state_size, this->meas_size, this->contr_size);        
 
-        kf.transitionMatrix  = cv::Mat::eye(_state_size, _state_size, CV_32F); // dtype = 32 bit float
-        kf.measurementMatrix = cv::Mat::zeros(_meas_size, _state_size, CV_32F);
+        kf.transitionMatrix  = cv::Mat::eye(state_size, state_size, CV_32F); // dtype = 32 bit float
+        kf.measurementMatrix = cv::Mat::zeros(meas_size, state_size, CV_32F);
 
-        for (int i = 0; i < _meas_size; i++) {
+        for (int i = 0; i < meas_size; i++) {
             kf.measurementMatrix.at<float>(i, i * 2) = 1; // access point (i, i*2) and assign it to 1;
         }
 
@@ -47,8 +49,8 @@ public:
             std::cout << "block: \n" << block << std::endl;
 
             // assignment of kf.processNoiseCov matrix
-            kf.processNoiseCov = cv::Mat::zeros(size_block * _meas_size, size_block * _meas_size, CV_32F) * proc_noise_scale;
-            for (int i = 0; i < _meas_size *2 ; i+=2) // 0, 2, 4, 6
+            kf.processNoiseCov = cv::Mat::zeros(size_block * meas_size, size_block * meas_size, CV_32F) * proc_noise_scale;
+            for (int i = 0; i < meas_size *2 ; i+=2) // 0, 2, 4, 6
             {                
                 for (int j = 0; j < 2; j++) // 0 ,1
                 {             
@@ -60,75 +62,86 @@ public:
             }            
         }
         if (strncmp(proc_noise_type, "identity", 2) == 0) {
-            kf.processNoiseCov = cv::Mat::eye(_state_size, _state_size, CV_32F);
+            kf.processNoiseCov = cv::Mat::eye(state_size, state_size, CV_32F);
         }
-        for (int i = 0; i < _meas_size; i += 2) 
+        for (int i = 0; i < meas_size; i += 2) 
         {
-            for (int j = 1; j < _n_lanes; j++) // 1 ???
+            for (int j = 1; j < n_lanes; j++) // 1 ???
             {                
                 kf.processNoiseCov.at<float>(i, i+(j*8)) = process_cov_parallel; 
                 kf.processNoiseCov.at<float>(i+(j*8), i) = process_cov_parallel;                 
             }
-        }
-        std::cout << kf.processNoiseCov << std::endl;
+        }        
 
-        kf.measurementNoiseCov = cv::Mat::eye(_meas_size, _meas_size, CV_32F);
-        kf.errorCovPre         = cv::Mat::eye(_state_size, _state_size, CV_32F);
+        kf.measurementNoiseCov = cv::Mat::eye(meas_size, meas_size, CV_32F);
+        kf.errorCovPre         = cv::Mat::eye(state_size, state_size, CV_32F);
 
-        cv::Mat meas  = cv::Mat::zeros(_meas_size, 1, CV_32F);
-        cv::Mat state = cv::Mat::zeros(_state_size, 1, CV_32F);
+        cv::Mat meas  = cv::Mat::zeros(meas_size, 1, CV_32F);
+        cv::Mat state = cv::Mat::zeros(state_size, 1, CV_32F);
 
-        _first_detected = false;
+        first_detected = false;
     }
     
-    void _update_dt(cv::KalmanFilter& kf, float dt)
+    void update_dt(cv::KalmanFilter& kf, float dt)
     {
-        for (int i = 0; i < _state_size; i+=2) {
+        for (int i = 0; i < state_size; i+=2) {
             kf.transitionMatrix.at<float>(i, i+1) = dt;
         }
     }
     // Mat state is defined in constructor
-    float _first_detect(cv::KalmanFilter& kf, std::vector<my::Line> lines)
+    float first_detect(cv::KalmanFilter& kf, std::vector<my::Line> lines, cv::Mat& state)
     {
-        for(auto& l : lines)
-        {
-            kf.state[i:i+8:2, 0] = l;
-        }
-        for lane, i in zip(lanes, range(0, _state_size, 8)): // lanes -> (x1, y1) and (x2, y2)
-            
+        for(auto& l : lines) // lines -> (x1, y1) and (x2, y2)
+        {            
+            state.at<float>(0, 0) = l.beg.x;            
+            state.at<float>(2, 0) = l.beg.y;            
+            state.at<float>(4, 0) = l.end.x;            
+            state.at<float>(6, 0) = l.end.y;            
+        }                    
         
         kf.statePost = state;
-        _first_detected = true;
+        this->first_detected = true;
     }
     
-    void update(cv::KalmanFilter& kf, cv::Mat& meas, int lanes)
+    void update(cv::KalmanFilter& kf, cv::Mat& meas, std::vector<my::Line> lines)
     {
-        if(_first_detected == true ) 
-        {            
-/*            for lane, i in zip(lanes, range(0, self.meas_size, 4))
-            {
-                if(lane != NULL)
-                    meas[i:i+4, 0] = lane;
-            }*/
-            kf.correct(meas);
-        }
-    }
-    float predict(float dt)
-    {
-        if(_first_detected)
+        if( this->first_detected == true ) 
         {
-/*            _update_dt(dt);
-            state = kf.predict();
-            std::vector<cv::Vec2f> lines;
-            for i in range(0, len(state), 8):
-                lanes.append((state[i], state[i+2], state[i+4], state[i+6]))
-            return lanes
-*/            
+            for (auto& l : lines) // lines -> (x1, y1) and (x2, y2)
+            {
+                meas.at<float>(0, 0) = l.beg.x;
+                meas.at<float>(1, 0) = l.beg.y;
+                meas.at<float>(2, 0) = l.end.x;
+                meas.at<float>(3, 0) = l.end.y;
+            }
+            kf.correct(meas);
         }
         else
         {
-            return NULL;
-        }        
+            if( lines.empty() == true )
+            {
+                first_detect(kf, lines, state);
+            }
+        }
+    }
+    std::vector<my::Line> predict(float dt)
+    {
+        if( this->first_detected == true )
+        {
+            update_dt(kf, dt);
+            state = kf.predict();
+            
+            std::vector<my::Line> lines;            
+            
+            lines.resize(100);                        
+
+            for (int i=0, i < 8, i++) {
+                cv::Point2f start = {state[i], state[i+2]};
+                cv::Point2f end   = {state[i+4], state[i+6]};
+                lines.push_back({ start, end });
+            }
+            return lines;
+        }                
     }    
 };
 #endif
