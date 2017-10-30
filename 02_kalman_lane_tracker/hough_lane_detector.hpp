@@ -141,9 +141,9 @@ private:
     {
         std::vector<my::Line> output;
         for (auto& e : input) {
-            cv::Point2f start = {e[0], e[1]};
+            cv::Point2f beg = {e[0], e[1]};
             cv::Point2f end   = {e[2], e[3]};
-            output.push_back({start, end});
+            output.push_back({beg, end});
         }
         return output;
     }

@@ -29,23 +29,29 @@ int main()
     long        frameCounter = 0;
     std::time_t timeBegin    = std::time(0);
     int         tick         = 0;
+    float ktick = 0;
 
     // Hough transform related
     float             init_vote = 150; // what's this for?    
     HoughLaneDetector hdetector(180); // road horizon: 180 degree 
-    std::pair<std::vector<cv::Vec4f>, std::vector<cv::Vec4f>> lane_line;
+    std::pair<my::Line, my::Line> lanes;    
 
     // Kalman filter for tracking
-    //KalmanLaneTracker KTracker(2, 0.1, 500);    
+    std::vector<my::Line> predicted;
+    KalmanLaneTracker KTracker(2, 0.1, 500);    
 
-//    while (true) {
+    while (true) {
         cv::UMat src, croppedImg, dst, cdst;
         // input image and check
         cap >> src;
         if (!cap.read(src)) { // if not success, break loop
             cout << "\n Cannot read the video file. \n";
-//            break;
+            break;
         }
+        // kalman filter
+        float precTick = ktick;
+        ktick = cv::getTickCount();
+        float dt = (ktick - precTick) / cv::getTickFrequency();
         // crop input image
         // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
         cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
@@ -53,44 +59,20 @@ int main()
         croppedRef.copyTo(croppedImg);
         // edge detection
         cv::Canny(croppedImg, dst, 50, 200, 3);
-        // detected lines
-        /* Test code */
-/*        
-        std::pair<cv::Point, cv::Point> hough_line_pair_pt;
-        hough_line_pair_pt = hdetector._standard_hough(dst, init_vote);        
-*/
-        //cv::imshow("Canny", dst);
-        //lane_line = hdetector.detect(croppedImg);
-        hdetector.detect(croppedImg);
+        // detected lines        
+        predicted = KTracker.predict(dt);
+        lanes = hdetector.detect(croppedImg);
 
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
-        // draw line
-        // unpack into two original lanes
-/*
-        std::vector<cv::Vec4f> left_lane, right_lane, line_left_lane, line_right_lane;
-        std::tie( left_lane, right_lane) = lane_line;
-        std::vector<std::vector<float>> lane_pair_point(1, std::vector<float>(4));
-        cv::Vec4f vec1;
-        left_lane[0][0];
-        for(int i=0;i<4;i++)
-        {
-
-        }
-        // copy value back for return        
-        cv::Point pt1, pt2;
-        */
-
-/*        for(auto& lane: lane_line)
-        {
-            cv::line(cdst, hough_line_pair_pt.first, hough_line_pair_pt.second, cvScalar(0, 0, 255), 3, cv::LINE_AA);
-        }
-*/        
-//        cout << hough_line_pair_pt.first << hough_line_pair_pt.second << endl;        
-        
+        // draw line                        
+        cv::line(cdst, predicted[0].beg, predicted[0].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+        cv::line(cdst, predicted[1].beg, predicted[1].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+        // update here
+        KTracker.update(lanes.first);
         // image check
         cv::imshow("source", src);
-        //cv::imshow("Frame", cdst);        
+        cv::imshow("Frame", cdst);        
 
         // Calculate frame per second
         frameCounter++;
@@ -101,11 +83,11 @@ int main()
             frameCounter = 0;
         }
         // Press  ESC on keyboard to exit
-//        char c = (char)cv::waitKey(25);
-//        if (c == 27) break;
-//        if (cv::waitKey(10) == 32) break;
+        char c = (char)cv::waitKey(25);
+        if (c == 27) break;
+        if (cv::waitKey(10) == 32) break;
         cv::waitKey();
-//    }
+    }
     // When everything done, release the video capture object
     cap.release();
     // Closes all the frames

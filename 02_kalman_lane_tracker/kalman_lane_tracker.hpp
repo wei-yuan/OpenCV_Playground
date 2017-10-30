@@ -18,10 +18,11 @@ protected:
     int  state_size;
     int  contr_size = 0;
     bool first_detected;
-    //cv::KalmanFilter kf;
-    //cv::Mat meas, state;
-
+    
 public:
+    cv::KalmanFilter kf;
+    cv::Mat meas, state;
+
     // constructor
     KalmanLaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale)
     {
@@ -31,9 +32,7 @@ public:
         this->state_size           = 2 * this->meas_size;
 
         std::cout << "n_lanes: " << n_lanes << ", meas_size: " << meas_size << ", state_size: " << state_size
-                  << ", _contr_size: " << contr_size << std::endl;
-
-        cv::KalmanFilter kf(this->state_size, this->meas_size, this->contr_size);        
+                  << ", _contr_size: " << contr_size << std::endl;                
 
         kf.transitionMatrix  = cv::Mat::eye(state_size, state_size, CV_32F); // dtype = 32 bit float
         kf.measurementMatrix = cv::Mat::zeros(meas_size, state_size, CV_32F);
@@ -82,63 +81,69 @@ public:
         first_detected = false;
     }
     
-    void update_dt(cv::KalmanFilter& kf, float dt)
+    void update_dt( float dt)
     {
         for (int i = 0; i < state_size; i+=2) {
             kf.transitionMatrix.at<float>(i, i+1) = dt;
         }
     }
     // Mat state is defined in constructor
-    float first_detect(cv::KalmanFilter& kf, std::vector<my::Line> lines, cv::Mat& state)
+    float first_detect( my::Line lines )
     {
-        for(auto& l : lines) // lines -> (x1, y1) and (x2, y2)
-        {            
-            state.at<float>(0, 0) = l.beg.x;            
-            state.at<float>(2, 0) = l.beg.y;            
-            state.at<float>(4, 0) = l.end.x;            
-            state.at<float>(6, 0) = l.end.y;            
-        }                    
+        //for(auto& l : lines) // lines -> (x1, y1) and (x2, y2)
+        //{            
+            state.at<float>(0, 0) = lines.beg.x;            
+            state.at<float>(2, 0) = lines.beg.y;            
+            state.at<float>(4, 0) = lines.end.x;            
+            state.at<float>(6, 0) = lines.end.y;            
+        //}                    
         
         kf.statePost = state;
         this->first_detected = true;
     }
     
-    void update(cv::KalmanFilter& kf, cv::Mat& meas, std::vector<my::Line> lines)
+    void update( my::Line lines )
     {
         if( this->first_detected == true ) 
         {
-            for (auto& l : lines) // lines -> (x1, y1) and (x2, y2)
-            {
-                meas.at<float>(0, 0) = l.beg.x;
-                meas.at<float>(1, 0) = l.beg.y;
-                meas.at<float>(2, 0) = l.end.x;
-                meas.at<float>(3, 0) = l.end.y;
-            }
+            //for (auto& l : lines) // lines -> (x1, y1) and (x2, y2)
+            //{
+                meas.at<float>(0, 0) = lines.beg.x;
+                meas.at<float>(1, 0) = lines.beg.y;
+                meas.at<float>(2, 0) = lines.end.x;
+                meas.at<float>(3, 0) = lines.end.y;
+            //}
             kf.correct(meas);
         }
         else
         {
-            if( lines.empty() == true )
+            int x1 = lines.beg.x;
+            int y1 = lines.beg.y;
+            int x2 = lines.end.x;
+            int y2 = lines.end.x;
+            if( ((x1 == 0) && (y1 == 0)) && ((x2 == 0) && (y2 == 0)) )
             {
-                first_detect(kf, lines, state);
+                first_detect( lines );
             }
         }
     }
-    std::vector<my::Line> predict(float dt)
+    std::vector<my::Line> predict( float dt)
     {
         if( this->first_detected == true )
         {
-            update_dt(kf, dt);
+            update_dt(dt);
             state = kf.predict();
             
-            std::vector<my::Line> lines;            
-            
+            std::vector<my::Line> lines;                        
             lines.resize(100);                        
 
-            for (int i=0, i < 8, i++) {
-                cv::Point2f start = {state[i], state[i+2]};
-                cv::Point2f end   = {state[i+4], state[i+6]};
-                lines.push_back({ start, end });
+            for (int i=0; i < 8; i++) 
+            {
+                cv::Point2f beg = {state.at<float>(i, 0), state.at<float>(i + 2, 0)};
+                cv::Point2f end   = {state.at<float>(i + 4, 0), state.at<float>(i + 6, 0)};
+                lines.push_back({ beg, end });
+                std::cout << "begin (x, y)= " << "(" << beg.x << "," << beg.y << ")" << std::endl;
+                std::cout << "End (x, y)= " << "(" << end.x << "," << end.y << ")" << std::endl;
             }
             return lines;
         }                
