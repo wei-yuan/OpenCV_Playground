@@ -68,8 +68,10 @@ int main()
         // draw line                        
 //        cv::line(cdst, predicted[0].beg, predicted[0].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
 //        cv::line(cdst, predicted[1].beg, predicted[1].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+
         // update here
 //        KTracker.update(lanes.first);
+
         // image check
         cv::imshow("source", src);
 //        cv::imshow("Frame", cdst);     
