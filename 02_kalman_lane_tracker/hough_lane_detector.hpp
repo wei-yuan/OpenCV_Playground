@@ -80,8 +80,7 @@ public:
         int ksize = 5;
         cv::medianBlur(gray, blur, ksize);
         // edge detection
-        cv::Canny(blur, contour, 60, 120);
-        imshow("canny in detect", contour);
+        cv::Canny(blur, contour, 60, 120);        
 
         std::vector<my::Line> lines;
         /* switch HoughlineP() or Houghline() here */
@@ -90,8 +89,7 @@ public:
         } else {
             lines = this->standard_hough(contour, this->vote);
         }
-
-        imshow("dst in detect", contour);
+        
         // prepare the color canvas for output image
         cv::cvtColor(contour, cdst, CV_GRAY2BGR);
         // draw line

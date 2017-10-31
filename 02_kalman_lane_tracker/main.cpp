@@ -72,7 +72,7 @@ int main()
 //        KTracker.update(lanes.first);
         // image check
         cv::imshow("source", src);
-        cv::imshow("Frame", cdst);        
+//        cv::imshow("Frame", cdst);     
 
         // Calculate frame per second
         frameCounter++;
