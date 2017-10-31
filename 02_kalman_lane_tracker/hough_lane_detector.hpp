@@ -22,29 +22,37 @@
 
 namespace my
 {
-    class Line
+class Line
+{
+public:
+    Line() {}
+    Line(cv::Point beg, cv::Point end)
     {
-    public:
-        Line() {}
-        Line(cv::Point beg, cv::Point end)
-        {
-            this->beg = beg;
-            this->end = end;
-        }
+        this->beg = beg;
+        this->end = end;
+    }
 
-        void swap()
-        {
-            cv::Point tmp = beg;
-            beg           = end;
-            end           = tmp;
-        }
+    void swap()
+    {
+        cv::Point tmp = beg;
+        beg           = end;
+        end           = tmp;
+    }
 
-        inline bool operator==(const Line& rhs) { return *this == rhs; }
-        inline bool operator!=(const Line& rhs) { return *this != rhs; }
+    inline bool operator==(const Line& rhs)
+    {
+        return (((this->beg.x == rhs.beg.x) || (this->beg.y == rhs.beg.y))
+                || ((this->end.x == rhs.end.x) || (this->end.y == rhs.end.y)) == true);
+    }
+    inline bool operator!=(const Line& rhs)
+    {
+        return (((this->beg.x != rhs.beg.x) || (this->beg.y != rhs.beg.y))
+                || ((this->end.x != rhs.end.x) || (this->end.y != rhs.end.y)) == true);
+    }
 
-        cv::Point beg = {};
-        cv::Point end = {};
-    };
+    cv::Point beg = {};
+    cv::Point end = {};
+};
 }
 
 class HoughLaneDetector
@@ -142,7 +150,7 @@ private:
         std::vector<my::Line> output;
         for (auto& e : input) {
             cv::Point2f beg = {e[0], e[1]};
-            cv::Point2f end   = {e[2], e[3]};
+            cv::Point2f end = {e[2], e[3]};
             output.push_back({beg, end});
         }
         return output;

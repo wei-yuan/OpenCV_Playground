@@ -60,16 +60,16 @@ int main()
         // edge detection
         cv::Canny(croppedImg, dst, 50, 200, 3);
         // detected lines        
-        predicted = KTracker.predict(dt);
+//        predicted = KTracker.predict(dt);
         lanes = hdetector.detect(croppedImg);
 
         // prepare the color canvas for output image
         cv::cvtColor(dst, cdst, CV_GRAY2BGR);
         // draw line                        
-        cv::line(cdst, predicted[0].beg, predicted[0].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
-        cv::line(cdst, predicted[1].beg, predicted[1].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+//        cv::line(cdst, predicted[0].beg, predicted[0].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
+//        cv::line(cdst, predicted[1].beg, predicted[1].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
         // update here
-        KTracker.update(lanes.first);
+//        KTracker.update(lanes.first);
         // image check
         cv::imshow("source", src);
         cv::imshow("Frame", cdst);        
@@ -85,8 +85,7 @@ int main()
         // Press  ESC on keyboard to exit
         char c = (char)cv::waitKey(25);
         if (c == 27) break;
-        if (cv::waitKey(10) == 32) break;
-        cv::waitKey();
+        if (cv::waitKey(10) == 32) break;        
     }
     // When everything done, release the video capture object
     cap.release();
