@@ -1,10 +1,22 @@
-include ./config.mak
-#get all c files.
+# OpenCV + OpenCL Makefile template
+#include ./config.mak
+#get all c++ files.
 SRCS=$(wildcard *.cpp)
 OBJS=$(addprefix objs/, $(patsubst %.cpp,%.o,$(SRCS)))
 DEPS=$(addprefix objs/, $(patsubst %.cpp,%.d,$(SRCS)))
+
+CXX=g++
+DEBUG = -g
+CFLAGS= -Wall -std=c++11 `pkg-config --cflags opencv` 
+LIBS=`pkg-config --libs opencv`
+
+# OpenCL Dynamic Linking
+PREFIX=/usr/local/cuda/targets/x86_64-linux
+LFLAGS=-L$(PREFIX)/lib -I$(PREFIX)/include -lOpenCL
+
 LOCAL_CFLAGS=-Wno-deprecated-declarations
-TARGET=cl_test
+
+TARGET=main #lane_detection_and_tracking
 
 .PHONY: all clean execute directories
 
@@ -12,14 +24,14 @@ all	:	directories $(TARGET)
 
 $(TARGET)	:	$(OBJS)
 	@echo "  LINK  $@"
-	@$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS) $(LOCAL_CFLAGS)
+	@$(CXX) $^ -o $@ $(DEBUG) $(CFLAGS) $(LIBS) $(LFLAGS) $(LOCAL_CFLAGS)
 
 objs/%.o	:	%.cpp
-	@echo "  CC    $@"
-	@$(CC) -c $< -o $@ $(CFLAGS) $(LOCAL_CFLAGS)
+	@echo "  CXX    $@"
+	@$(CXX) -c $< -o $@ $(CFLAGS) $(LOCAL_CFLAGS)
 
 objs/%.d	:	%.cpp
-	@$(CC) -MM $^ -MT $(patsubst %.d,%.o,$@) > $@
+	@$(CXX) -MM $^ -MT $(patsubst %.d,%.o,$@) > $@
 
 directories	:	
 	@mkdir -p objs
