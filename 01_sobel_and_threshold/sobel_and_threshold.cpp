@@ -21,6 +21,7 @@ int main()
 
     // count time 
     std::time_t timeBegin = std::time(0);
+    long frameCounter = 0;
     int tick = 0;
 
     // OpenCL related
@@ -29,20 +30,12 @@ int main()
     ocl::setUseOpenCL(true);    
 
     // sobel filter
-    int nBlurs = 50;
-    long frameCounter = 0;
+    int nBlurs = 50;    
         
-    cv::UMat frame;
-    cv::UMat frameGray;
-    cv::UMat frameSobelx;
-    cv::UMat frameSobely;    
-    cv::UMat frameSobel;
-    cv::UMat blurredSobel;
+    cv::UMat frame, frameGray, frameSobelx, frameSobely, frameSobel, blurredSobel;
     
     // thresh
-    int thresh_val = 125;
-    int max_BINARY_value = 256;
-    int threshold_type = THRESH_TOZERO_INV;
+    int thresh_val = 125, max_BINARY_value = 256, threshold_type = THRESH_TOZERO_INV;
     
     cv::UMat thresh;
 
