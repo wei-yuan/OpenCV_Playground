@@ -24,12 +24,15 @@ int main()
 
     cout << "Have OpenCL?: " << cv::ocl::haveOpenCL() << endl;
     /*  SWITCH OPENCL ON/OFF IN LINE BELLOW */
-    cv::ocl::setUseOpenCL(true);
+    cv::ocl::setUseOpenCL(false);
 
     long        frameCounter = 0;
     std::time_t timeBegin    = std::time(0);
     int         tick         = 0;
     float ktick = 0;
+    
+    double fps = cap.get(CV_CAP_PROP_FPS);
+    double fps2 = cap.get(cv::CAP_PROP_FPS);
 
     // Hough transform related
     float             init_vote = 150; // what's this for?    
@@ -41,7 +44,8 @@ int main()
     KalmanLaneTracker KTracker(2, 0.1, 500);    
 
     while (true) {
-        cv::UMat src, croppedImg, dst, cdst;
+        //cv::UMat src, croppedImg, dst, cdst;
+        cv::Mat src, croppedImg, dst, cdst;
         // input image and check
         cap >> src;
         if (!cap.read(src)) { // if not success, break loop
@@ -54,8 +58,9 @@ int main()
         float dt = (ktick - precTick) / cv::getTickFrequency();
         // crop input image
         // cv::Rect roi(xMin,yMin,xMax-xMin,yMax-yMin);
-        cv::Rect myROI(500, 300, 100 * 4, 100 * 3);
-        cv::UMat croppedRef(src, myROI);
+        cv::Rect myROI(500, 300, 100 * 4, 100 * 3);        
+        //cv::UMat croppedRef(src, myROI);
+        cv::Mat croppedRef(src, myROI);
         croppedRef.copyTo(croppedImg);
         // edge detection
         cv::Canny(croppedImg, dst, 50, 200, 3);
@@ -84,6 +89,9 @@ int main()
             cout << "Frames per second: " << frameCounter << endl;
             frameCounter = 0;
         }
+
+        cout << "Frames per second using video.get(CV_CAP_PROP_FPS) : " << fps << endl;
+        cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps2 << endl;
         // Press  ESC on keyboard to exit
         char c = (char)cv::waitKey(25);
         if (c == 27) break;

@@ -68,9 +68,11 @@ public:
     }
 
     // std::pair<std::vector<cv::Vec4f>, std::vector<cv::Vec4f>> detect(cv::UMat& frame)
-    std::pair<my::Line, my::Line> detect(cv::UMat& frame)
+    //std::pair<my::Line, my::Line> detect(cv::UMat& frame)
+    std::pair<my::Line, my::Line> detect(cv::Mat& frame)
     {
-        cv::UMat gray, dst, cdst, blur, contour;
+        //cv::UMat gray, dst, cdst, blur, contour;
+        cv::Mat gray, dst, cdst, blur, contour;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
         // w = frame.shape[0], h = frame.shape[1]
         int roiy_end = frame.rows;
@@ -155,7 +157,8 @@ private:
     }
 
     // Hough Trnasform wrapper to return a series of point
-    std::vector<my::Line> standard_hough(cv::UMat& frame, float initial_vote)
+    //std::vector<my::Line> standard_hough(cv::UMat& frame, float initial_vote)
+    std::vector<my::Line> standard_hough(cv::Mat& frame, float initial_vote)
     {
         // input argument of HoughLines(dst, lines, rho, theta, threshold, srn ,stn)
         // -dst: Output of the edge detector
@@ -191,7 +194,8 @@ private:
     }
 
     // Hough Trnasform wrapper to return a series of point
-    std::vector<my::Line> houghp(cv::UMat& frame, float initial_vote)
+    //std::vector<my::Line> houghp(cv::UMat& frame, float initial_vote)
+    std::vector<my::Line> houghp(cv::Mat& frame, float initial_vote)
     {
         std::vector<cv::Vec4f> plines;
         // type of lines cv::Vec4fneed to be std::vector<cv::Vec4f>, i.e. vector with 4 float element
