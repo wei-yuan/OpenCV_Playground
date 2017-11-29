@@ -176,11 +176,6 @@ cv::UMat& opencl_mat_add(cv::UMat& input_array1, cv::UMat& input_array2, cv::UMa
         //return -1;
     }
    
-    // ---------------------------------------------------
-    // Copy data from device(GPU) to host(CPU)
-    // ---------------------------------------------------     
-    // Download the dst data from the device
-
     return output_array;
 }
 
@@ -249,8 +244,9 @@ int main()
 
     cv::UMat A = cv::UMat::ones(8, 8, CV_32F);
     cv::UMat B = cv::UMat::ones(8, 8, CV_32F);
-    cv::UMat C = cv::UMat::ones(8, 8, CV_32F);
+    cv::UMat C = cv::UMat::zeros(8, 8, CV_32F);
     cv::UMat C_dst = cv::UMat::zeros(8, 8, CV_32F);
+    
     C_dst = opencl_mat_add(A, B, C);    
     std::cout << "\nC_dst: \n" << C_dst << std::endl;      
 
