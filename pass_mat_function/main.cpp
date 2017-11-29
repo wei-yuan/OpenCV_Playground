@@ -179,26 +179,90 @@ cv::UMat& opencl_mat_add(cv::UMat& input_array1, cv::UMat& input_array2, cv::UMa
     return output_array;
 }
 
-cv::UMat& kalman_gain(cv::KalmanFilter& KF, cv::UMat& output_array)
+cv::UMat& opencl_mat_subtract(cv::UMat& input_array1, cv::UMat& input_array2, cv::UMat& output_array)
 {
+    std::cout << "input_array1: \n" << input_array1 << std::endl;    
+    std::cout << "input_array2: \n" << input_array2 << std::endl;
+    std::cout << "output_array: \n" << output_array << std::endl;    
+
+    // ---------------------------------------------------
+    // OpenCL Initialization
+    // ---------------------------------------------------
+    // check OpenCL availability
+    if (!cv::ocl::haveOpenCL())
+    {
+        std::cout << "OpenCL is not avaiable..." << std::endl;
+        //return -1;
+    }
+
+    // create context
+    cv::ocl::Context context;
+    if (!context.create(cv::ocl::Device::TYPE_GPU))
+    {
+        std::cout << "Failed creating the context..." << std::endl;
+        //return -1;
+    }
+
+    // device detection
+    std::cout << context.ndevices() << " GPU devices are detected." << std::endl;
+    for (int i = 0; i < context.ndevices(); i++)
+    {
+        cv::ocl::Device device = context.device(i);
+        std::cout << "name                 : " << device.name() << std::endl;
+        std::cout << "available            : " << device.available() << std::endl;
+        std::cout << "imageSupport         : " << device.imageSupport() << std::endl;
+        std::cout << "OpenCL_C_Version     : " << device.OpenCL_C_Version() << std::endl;
+    }
+
+    // Select the first device
+    cv::ocl::Device(context.device(0));
+
+    // ---------------------------------------------------
+    // Kernel Initialization
+    // ---------------------------------------------------
+    // Read the OpenCL kernel code
+    std::ifstream ifs("mat_subtract.cl");
+    if (ifs.fail()) 
+        std::cout << "Failed to read opencl file" << std::endl; 
+    std::string kernelSource((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    cv::ocl::ProgramSource programSource(kernelSource);
+
+    // Compile the kernel code
+    cv::String errmsg;
+    // By setting program argument "-D xxx=yyy ", we can replace xxx with yyy in the kernel
+    cv::String buildopt =""; 
+    cv::ocl::Program program = context.getProg(programSource, buildopt, errmsg);    
+
+    // ---------------------------------------------------
+    // Create Kernel and run
+    // ---------------------------------------------------    
+    // create kernel
+    cv::ocl::Kernel kernel_statePre("mat_subtract", program);
+    // kernel argument
+    int Mat_type = CV_32F;    
+    // use input UMat data directly
+    kernel_statePre.args(Mat_type,  
+                        cv::ocl::KernelArg::ReadOnlyNoSize(input_array1),
+                        cv::ocl::KernelArg::ReadOnlyNoSize(input_array2),
+                        cv::ocl::KernelArg::ReadWrite(output_array));                        
+    // thread size
+    size_t globalThreads[3] = { (size_t)input_array1.cols, (size_t)input_array1.rows, 1 };
+    //size_t localThreads[3] = { 16, 16, 1 };
+
+    bool success = kernel_statePre.run(3, globalThreads, NULL, true);
+    if (!success){
+        std::cout << "Failed running the kernel..." << std::endl;
+        //return -1;
+    }
+   
     return output_array;
 }
 
-
-int main()
-{
-    /////////////////////////////////////////////////////////
-    // Update Stage
-    /////////////////////////////////////////////////////////
-    // Kalman gain
-    /////////////////////////////////////////////////////////
-    
+cv::UMat& kalman_gain(cv::KalmanFilter& KF, cv::UMat& output_array)
+{   
     /*******************************************************/
     // temp2 = H * Pk-
     /*******************************************************/    
-    // ****** Data Initialization ********* //
-    // Kalman filter here, DP = 16, MP = 8, CP = 0
-    cv::KalmanFilter KF(16, 8, 0);
     // KF.transitionMatrix needs to be CV_32F or CV_64F
     std::cout << "****** input mat: \n" << std::endl;    
     // UMat: Transfer Mat data to the device
@@ -255,9 +319,56 @@ int main()
     /*******************************************************/
     // Kk = transpose of temp4 
     /*******************************************************/
-    kt_dst.t();
+    output_array = kt_dst.t();    
     std::cout << "\n****** Kalman gain = temp2 * Ht + R: "  << std::endl;
-    std::cout << "\nKk: \n" << kt_dst.t() << std::endl;          
+    std::cout << "\nKk: \n" << output_array << std::endl;
+    
+    return output_array;
+}
 
+cv::UMat& kalman_predict(cv::KalmanFilter& KF, cv::UMat& output_array)
+{
+    //
+    return output_array;
+}
+
+cv::UMat& kalman_correct(cv::KalmanFilter& KF, cv::UMat& output_array)
+{
+    /*******************************************************/
+    // Calculate Kalman gain
+    /*******************************************************/      
+    cv::UMat kgain, kgain_dst;
+
+    kgain_dst = kalman_gain(KF, kgain);
+    std::cout << "\nkgain_dst: \n" << kgain_dst << std::endl;
+    /*******************************************************/
+    // Calculate statePost Xk hat
+    /*******************************************************/    
+    // tmp1 = H * X(k)-
+    // tmp2 = zk - tmp1
+    // tmp2 = zk - tmp1
+    // tmp3 = Kk * tmp2
+    // statePost = X(k)- + tmp3
+
+    /*******************************************************/
+    // Calculate errorCovPost
+    /*******************************************************/    
+    // tmp1 = Kk * H
+    // tmp2 = I - tmp1
+    // errorCovPost = tmp2 * errorCovPre(from predict stage)
+
+    return output_array;
+}
+
+int main()
+{
+    /////////////////////////////////////////////////////////
+    // Update Stage
+    /////////////////////////////////////////////////////////
+    // ****** Data Initialization ********* //
+    // Kalman filter here, DP = 16, MP = 8, CP = 0
+    cv::KalmanFilter KF(16, 8, 0);
+    
+    
     return 0;
 }
