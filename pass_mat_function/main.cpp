@@ -242,17 +242,22 @@ int main()
     std::cout << "\n****** temp3 = temp2 * Ht + R: "  << std::endl;
     std::cout << "\nHPHR: \n" << HPHR << std::endl;      
 
-    cv::UMat A = cv::UMat::ones(8, 8, CV_32F);
-    cv::UMat B = cv::UMat::ones(8, 8, CV_32F);
-    cv::UMat C = cv::UMat::zeros(8, 8, CV_32F);
-    cv::UMat C_dst = cv::UMat::zeros(8, 8, CV_32F);
-    
-    C_dst = opencl_mat_add(A, B, C);    
-    std::cout << "\nC_dst: \n" << C_dst << std::endl;      
+    /*******************************************************/
+    // temp4 = inv(temp3) * temp2
+    /*******************************************************/
+    std::cout << "\n****** temp4 = inv(temp3) * temp2: "  << std::endl;
+    cv::UMat kt = cv::UMat::zeros(8, 16, CV_32F);
+    cv::UMat kt_dst = cv::UMat::zeros(8, 16, CV_32F);
+    cv::UMat inv = HPHR.inv();
+    kt_dst = opencl_mat_mul(inv, HP_dst, kt_dst);
+    std::cout << "\nkt_dst: \n" << kt_dst << std::endl;       
 
     /*******************************************************/
-    // inv(temp3) * temp2
-    /*******************************************************/        
+    // Kk = transpose of temp4 
+    /*******************************************************/
+    kt_dst.t();
+    std::cout << "\n****** Kalman gain = temp2 * Ht + R: "  << std::endl;
+    std::cout << "\nKk: \n" << kt_dst.t() << std::endl;          
 
     return 0;
 }

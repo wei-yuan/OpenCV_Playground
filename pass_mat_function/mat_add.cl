@@ -45,10 +45,12 @@ __kernel void mat_add(
     int src2_index =  (row * src2_step + (col + src2_offset)) / 4;    
     int dst_index  =  (row * dst_step + (col + dst_offset)) / 4;
 
+/*
     printf("\nsrc1_step: %d", src1_step);
     printf("\ncol: %d, rol: %d", col, row);
     printf("\nsrc1_index: %d, src2_index: %d, dst_index: %d", src1_index,src2_index, dst_index);    
     printf("\nindex: %d", index);    
+*/
 
 //    dst[dst_index] = src1[src1_index] + src2[src2_index];    
     dst[index] = src1[index] + src2[index];    
