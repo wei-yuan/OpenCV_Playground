@@ -24,7 +24,7 @@ int main()
 
     cout << "Have OpenCL?: " << cv::ocl::haveOpenCL() << endl;
     /*  SWITCH OPENCL ON/OFF IN LINE BELLOW */
-    cv::ocl::setUseOpenCL(false);
+    cv::ocl::setUseOpenCL(true);
 
     long        frameCounter = 0;
     std::time_t timeBegin    = std::time(0);
@@ -65,7 +65,7 @@ int main()
         // edge detection
         cv::Canny(croppedImg, dst, 50, 200, 3);
         // detected lines        
-//        predicted = KTracker.predict(dt);
+        predicted = KTracker.predict(dt);
         lanes = hdetector.detect(croppedImg);
 
         // prepare the color canvas for output image
@@ -75,7 +75,7 @@ int main()
 //        cv::line(cdst, predicted[1].beg, predicted[1].end, cvScalar(0, 0, 255), 3, cv::LINE_AA);
 
         // update here
-//        KTracker.update(lanes.first);
+        KTracker.update(lanes.first);
 
         // image check
         cv::imshow("source", src);

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session version="1" name="NewSession1" hscale="1.0E-6">
+<executable file="/home/alex504/OpenCV_Playground/opencv_using_opencl_kernel_example1/main" timestamp="1512125680000" cwd="/home/alex504/OpenCV_Playground/opencv_using_opencl_kernel_example1" profileonstart="true" concurrentkernels="true" apitrace="true" environmentprofiling="false" uvmprofiling="true"><envs><env name="COMPUTE_PROFILE" value="1"/></envs></executable>
+<expert><columnprops></columnprops>
+</expert>
+<analysis guided="true"><visitedstages><stage name="TIMELINE"/></visitedstages></analysis>
+<expertsystem current="INTRO"><visited><stage name="INTRO"/></visited></expertsystem>
+<vruler width="200"/>
+<hruler>
+</hruler>
+<timelinestate>
+</timelinestate>
+<pdm>
+H4sIAAAAAAAAAGNgYWBgY2BgkGDADhhZIDQTlP7//389AH6WWHk0AAAA</pdm>
+</session>

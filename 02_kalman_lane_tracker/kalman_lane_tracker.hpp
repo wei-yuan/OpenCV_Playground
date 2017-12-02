@@ -26,8 +26,11 @@ public:
     // constructor
     KalmanLaneTracker(int n_lanes, float proc_noise_scale, float meas_noise_scale)
     {
-        float process_cov_parallel = 0;
+        int process_cov_parallel = 0;
         char  proc_noise_type[]    = "white";
+        std::cout << "n_lanes: "  << n_lanes << std::endl;
+        this->n_lanes              = n_lanes;
+        std::cout << "this -> n_lanes: "  << this->n_lanes << std::endl;
         this->meas_size            = 4 * this->n_lanes;
         this->state_size           = 2 * this->meas_size;
 
@@ -106,7 +109,7 @@ public:
     {
         if( this->first_detected == true ) 
         {
-            //for (auto& l : lines) // lines -> (x1, y1) and (x2, y2)
+            for (auto& l : lines) // lines -> (x1, y1) and (x2, y2)
             //{
                 meas.at<float>(0, 0) = lines.beg.x;
                 meas.at<float>(1, 0) = lines.beg.y;
@@ -127,6 +130,7 @@ public:
             }
         }
     }
+
     std::vector<my::Line> predict( float dt)
     {
         if( this->first_detected == true )
