@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "opencv2/core.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/video/tracking.hpp>
@@ -355,9 +356,14 @@ cv::Mat& kalman_predict(cv::KalmanFilter& KF, const cv::Mat& control)
     KF.errorCovPre = opencl_mat_mul(AP_dst, At, Xk).getMat(CV_32F);
 
     // handle the case when there will be measurement before the next predict.
-    // copyto() ???
+    // copyto() undefined reference???
+    /*
+    KF.statePre.copyTo(KF.statePost);
+    KF.errorCovPre.copyTo(KF.errorCovPost);
+    */
     KF.statePre = KF.statePost;
     KF.errorCovPre = KF.errorCovPost;
+    
 
     return KF.statePre;
 }
