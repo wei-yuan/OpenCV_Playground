@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-//#include <iterator>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/video/tracking.hpp>
@@ -340,7 +339,7 @@ cv::Mat& kalman_predict(cv::KalmanFilter& KF, const cv::Mat& control)
     cv::UMat Xk;
     
     KF.statePre = opencl_mat_mul(A, Xkmo, Xk).getMat(CV_32F);
-
+    
 
     /*******************************************************/
     // errorCovPre P(k) = AP(k-1)At + Q
@@ -356,8 +355,9 @@ cv::Mat& kalman_predict(cv::KalmanFilter& KF, const cv::Mat& control)
     KF.errorCovPre = opencl_mat_mul(AP_dst, At, Xk).getMat(CV_32F);
 
     // handle the case when there will be measurement before the next predict.
-    KF.statePre.copyTo(KF.statePost);
-    KF.errorCovPre.copyTo(KF.errorCovPost);
+    // copyto() ???
+    KF.statePre = KF.statePost;
+    KF.errorCovPre = KF.errorCovPost;
 
     return KF.statePre;
 }
@@ -417,17 +417,21 @@ int main()
 {
     // ****** Data Initialization ********* //
     // Kalman filter here, DP = 16, MP = 8, CP = 0
-    cv::KalmanFilter KF(16, 8, 0);
+    int DP = 16, MP = 8, CP = 0;
+    cv::KalmanFilter KF(DP, MP, CP);
 
     /////////////////////////////////////////////////////////
     // Predict Stage
     /////////////////////////////////////////////////////////    
-
+    cv::Mat measurement = cv::Mat::ones(DP, 1, CV_32F);
+    cv::Mat predict = kalman_predict(KF, measurement);
     
     /////////////////////////////////////////////////////////
     // Update Stage
     /////////////////////////////////////////////////////////    
-    
-    
+    cv::Mat control = cv::Mat::ones(MP, 1, CV_32F);
+    cv::Mat update = kalman_predict(KF, control);  
+
+    std::cout << "\npredict:" << predict << "control" << control << std::endl;
     return 0;
 }
