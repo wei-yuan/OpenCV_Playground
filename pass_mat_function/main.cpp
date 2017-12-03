@@ -329,12 +329,40 @@ cv::UMat& kalman_gain(cv::KalmanFilter& KF, cv::UMat& output_array)
     return output_array;
 }
 
+// B: control
 cv::Mat& kalman_predict(cv::KalmanFilter& KF, const cv::Mat& control)
 {
-    //
-    return ;
+    /*******************************************************/
+    // X(k) = AX(k-1) + Bu(k-1) + Q
+    /*******************************************************/
+    cv::UMat A = cv::UMat::ones(KF.transitionMatrix.size(), CV_32F);
+    cv::UMat Xkmo = cv::UMat::ones(16, 1, CV_32F);
+    cv::UMat Xk;
+    
+    KF.statePre = opencl_mat_mul(A, Xkmo, Xk).getMat(CV_32F);
+
+
+    /*******************************************************/
+    // errorCovPre P(k) = AP(k-1)At + Q
+    /*******************************************************/
+    // errorCovPost = P(k-1)
+    cv::UMat Pkmo = cv::UMat::ones(KF.errorCovPost.size(), CV_32F);
+    // temp1 = AP(k-1)
+    cv::UMat AP, AP_dst;
+    AP_dst = opencl_mat_mul(A, Pkmo, AP);
+
+    // temp2 = temp1 * transpose(A)    
+    cv::UMat At = A.t();
+    KF.errorCovPre = opencl_mat_mul(AP_dst, At, Xk).getMat(CV_32F);
+
+    // handle the case when there will be measurement before the next predict.
+    KF.statePre.copyTo(KF.statePost);
+    KF.errorCovPre.copyTo(KF.errorCovPost);
+
+    return KF.statePre;
 }
 
+// zk: measurement
 cv::Mat& kalman_correct(cv::KalmanFilter& KF, const cv::Mat& measurement)
 {
     /*******************************************************/
@@ -387,12 +415,18 @@ cv::Mat& kalman_correct(cv::KalmanFilter& KF, const cv::Mat& measurement)
 
 int main()
 {
-    /////////////////////////////////////////////////////////
-    // Update Stage
-    /////////////////////////////////////////////////////////
     // ****** Data Initialization ********* //
     // Kalman filter here, DP = 16, MP = 8, CP = 0
     cv::KalmanFilter KF(16, 8, 0);
+
+    /////////////////////////////////////////////////////////
+    // Predict Stage
+    /////////////////////////////////////////////////////////    
+
+    
+    /////////////////////////////////////////////////////////
+    // Update Stage
+    /////////////////////////////////////////////////////////    
     
     
     return 0;
