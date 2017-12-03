@@ -322,17 +322,20 @@ cv::UMat& kalman_gain(cv::KalmanFilter& KF, cv::UMat& output_array)
     output_array = kt_dst.t();    
     std::cout << "\n****** Kalman gain = temp2 * Ht + R: "  << std::endl;
     std::cout << "\nKk: \n" << output_array << std::endl;
+
+    KF.measurementMatrix = H.getMat(CV_32F);
+    std::cout << "\nKF.measurementMatrix: \n" << KF.measurementMatrix << std::endl;
     
     return output_array;
 }
 
-cv::UMat& kalman_predict(cv::KalmanFilter& KF, cv::UMat& output_array)
+cv::Mat& kalman_predict(cv::KalmanFilter& KF, const cv::Mat& control)
 {
     //
-    return output_array;
+    return ;
 }
 
-cv::UMat& kalman_correct(cv::KalmanFilter& KF, cv::UMat& output_array)
+cv::Mat& kalman_correct(cv::KalmanFilter& KF, const cv::Mat& measurement)
 {
     /*******************************************************/
     // Calculate Kalman gain
@@ -340,24 +343,46 @@ cv::UMat& kalman_correct(cv::KalmanFilter& KF, cv::UMat& output_array)
     cv::UMat kgain, kgain_dst;
 
     kgain_dst = kalman_gain(KF, kgain);
-    std::cout << "\nkgain_dst: \n" << kgain_dst << std::endl;
     /*******************************************************/
     // Calculate statePost Xk hat
     /*******************************************************/    
     // tmp1 = H * X(k)-
+    cv::UMat H = KF.measurementMatrix.getUMat(CV_32F);
+    cv::UMat Xkm = KF.statePre.getUMat(CV_32F);
+    cv::UMat HXkm, HXkm_dst;
+    HXkm_dst = opencl_mat_mul(H, Xkm, HXkm);
+
     // tmp2 = zk - tmp1
-    // tmp2 = zk - tmp1
+    cv::UMat zk = measurement.getUMat(CV_32F);
+    cv::UMat zH, zH_dst;
+    zH_dst = opencl_mat_subtract(zk, HXkm_dst, zH);
+
     // tmp3 = Kk * tmp2
+    cv::UMat kz, kz_dst;
+    kz_dst = opencl_mat_mul(kgain_dst, zH_dst, kz);
+
     // statePost = X(k)- + tmp3
+    cv::UMat statePost;
+    KF.statePost = opencl_mat_add(Xkm, kz_dst, statePost).getMat(CV_32F);
 
     /*******************************************************/
     // Calculate errorCovPost
     /*******************************************************/    
     // tmp1 = Kk * H
-    // tmp2 = I - tmp1
-    // errorCovPost = tmp2 * errorCovPre(from predict stage)
+    cv::UMat KH, KH_dst;
+    KH_dst = opencl_mat_mul(kgain_dst, H, KH_dst);
 
-    return output_array;
+    // tmp2 = I - tmp1
+    cv::UMat IK, IK_dst;
+    cv::UMat I = cv::UMat::eye(HXkm.size(), CV_32F);
+    IK_dst = opencl_mat_subtract(I, H, IK);
+
+    // errorCovPost = tmp2 * errorCovPre(from predict stage)
+    cv::UMat IZ, IZ_dst;
+    IZ_dst = opencl_mat_mul(IK_dst, zH_dst, IZ);
+    KF.errorCovPost = IZ_dst.getMat(CV_32F);
+
+    return KF.errorCovPost;
 }
 
 int main()
