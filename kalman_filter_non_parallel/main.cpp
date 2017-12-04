@@ -17,14 +17,19 @@ int main()
     // Predict Stage
     /////////////////////////////////////////////////////////    
     cv::Mat measurement = cv::Mat::ones(DP, 1, CV_32F);
-    cv::Mat predict = KF.predict(measurement);
+    std::cout << "\nmeasurement:" << measurement << std::endl;
+    cv::Mat predict = KF.predict();
+    std::cout << "\npredict: \n" << predict << std::endl;
     
     /////////////////////////////////////////////////////////
     // Update Stage
     /////////////////////////////////////////////////////////    
+
     cv::Mat control = cv::Mat::ones(MP, 1, CV_32F);
+    std::cout << "\n control: \n" << control << std::endl;
     cv::Mat update = KF.correct(control);  
 
     std::cout << "\npredict:" << predict << "control" << control << std::endl;
+
     return 0;
 }
