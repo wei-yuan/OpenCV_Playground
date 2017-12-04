@@ -1,5 +1,5 @@
 //template<typename T>
-__kernel void kalman_predict_2Mat(
+__kernel void mat_mul(
    int mat_type,
    __global float* src1,
    int src1_step, int src1_offset,
@@ -41,9 +41,6 @@ __kernel void kalman_predict_2Mat(
     {
         sum += src1[row * src1_step + i] * src2[i * src2_step + col];
     }
-/*    
-    printf("\nsrc1_step: %d", src1_step);    
-    printf("\nsrc1_offset: %d", src1_offset);
-*/
+
     dst[row * src2_step + col] = sum;    
 };
