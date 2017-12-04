@@ -23,7 +23,7 @@ int main()
 
     std::cout << "mat_time: " << mat_time << "sec" << std::endl;
 
-    //cv::imshow("720p", src);
+    cv::imshow("720p", src);
     //cv::waitKey();
     return 0;
 }
