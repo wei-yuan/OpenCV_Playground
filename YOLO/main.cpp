@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <opencv2/dnn.hpp>
 #include <opencv2/dnn/shape_utils.hpp>
 #include <opencv2/imgproc.hpp>
@@ -34,6 +35,7 @@ const char* params
 
 int main(int argc, char** argv)
 {
+    
     CommandLineParser parser(argc, argv, params);
 
     if (parser.get<bool>("help"))
@@ -59,8 +61,18 @@ int main(int argc, char** argv)
         cerr << "https://pjreddie.com/darknet/yolo/" << endl;
         exit(-1);
     }
+/*
+    // cap is the object of class video capture that tries to capture video file
+    cv::VideoCapture cap("/home/alex504/img_video_file/car.mp4");
+    // cv::VideoCapture cap("/home/alex/img_video_file/road_view.mp4");
 
-    VideoCapture cap;
+    if (!cap.isOpened()) // isOpened() returns true if capturing has been initialized.
+    {
+        cout << "Cannot open the video file. \n";
+        return -1;
+    }
+*/
+    VideoCapture cap;    
     if (parser.get<String>("video").empty())
     {
         int cameraDevice = parser.get<int>("camera_device");
@@ -80,6 +92,10 @@ int main(int argc, char** argv)
             return -1;
         }
     }
+
+    Size videoSize = Size((int)cap.get(CV_CAP_PROP_FRAME_WIDTH),(int)cap.get(CV_CAP_PROP_FRAME_HEIGHT));    
+    VideoWriter writer;
+    writer.open("YOLO_processed.avi", CV_FOURCC('M', 'J', 'P', 'G'), 30, videoSize);
 
     vector<string> classNamesVec;
     ifstream classNamesFile(parser.get<String>("class_names").c_str());
@@ -181,9 +197,10 @@ int main(int argc, char** argv)
             }
         }
 
+        writer.write(frame);
         imshow("detections", frame);
         if (waitKey(1) >= 0) break;
     }
-
+    
     return 0;
 } // main

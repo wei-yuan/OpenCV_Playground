@@ -470,6 +470,35 @@ int main()
     int DP = 16, MP = 8, CP = 0;
     cv::KalmanFilter KF(DP, MP, CP);
 
+    // ---------------------------------------------------
+    // OpenCL Initialization
+    // ---------------------------------------------------
+    // check OpenCL availability
+    if (!cv::ocl::haveOpenCL())
+    {
+        std::cout << "OpenCL is not avaiable..." << std::endl;
+        //return -1;
+    }
+
+    // create context
+    cv::ocl::Context context;
+    if (!context.create(cv::ocl::Device::TYPE_GPU))
+    {
+        std::cout << "Failed creating the context..." << std::endl;
+        //return -1;
+    }
+
+    // device detection
+    std::cout << context.ndevices() << " GPU devices are detected." << std::endl;
+    for (int i = 0; i < context.ndevices(); i++)
+    {
+        cv::ocl::Device device = context.device(i);
+        std::cout << "name                 : " << device.name() << std::endl;
+        std::cout << "available            : " << device.available() << std::endl;
+        std::cout << "imageSupport         : " << device.imageSupport() << std::endl;
+        std::cout << "OpenCL_C_Version     : " << device.OpenCL_C_Version() << std::endl;
+    }
+
     /////////////////////////////////////////////////////////
     // Predict Stage
     /////////////////////////////////////////////////////////    

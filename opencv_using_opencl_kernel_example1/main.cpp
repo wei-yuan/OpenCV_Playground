@@ -62,7 +62,7 @@ int main()
     cv::ocl::Device(context.device(0));
 
     // Transfer Mat data to the device
-    cv::Mat mat_src = cv::imread("/home/alex504/img_video_file/test_img.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat mat_src = cv::imread("test_img.jpg", cv::IMREAD_GRAYSCALE);
     cv::UMat umat_src = mat_src.getUMat(cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     cv::UMat umat_dst(mat_src.size(), mat_src.type(), cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     
@@ -109,4 +109,4 @@ int main()
     cout << "Succeed" << endl;
 
     return 0;
-}
+}~
