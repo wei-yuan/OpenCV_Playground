@@ -292,11 +292,7 @@ cv::UMat& kalman_gain(cv::KalmanFilter& KF, cv::UMat& output_array)
     cv::UMat HPH_dst = cv::UMat::eye(8, 8, CV_32F);
 
     cv::UMat R = cv::UMat::ones(8, 8, CV_32F);
-/*  delete annotation mark if all process is ready  
-    std::cout << "\nR: \n" << R << std::endl;    
-    cv::randu(R, cv::Scalar::all((double)-500), cv::Scalar::all((double)500)); // dst , input1, input2, watch out for chnnel number
-    std::cout << "\nR: \n" << R << std::endl;   
-*/    
+   
     cv::UMat HPHR = cv::UMat::zeros(8, 8, CV_32F); 
 
     // matrix multiplication using opencl
