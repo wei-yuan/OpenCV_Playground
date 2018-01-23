@@ -44,30 +44,33 @@ void equalOfHist( cv::Mat& src) // src type: CV_8U
             hist.at<int>(0, idx) += 1;    // only one row in hist
         }        
     }    
-    std::cout <<"matSize:\n" << matSize << std::endl;
-
-    // create the Mat objects to save our histograms
-    cv::Mat hist_img;        
-
+//    std::cout <<"matSize:\n" << matSize << std::endl;
+/*
+    //---------------------------------------// 
     // Draw the histograms     
+    //---------------------------------------//          
+    cv::Mat hist_plot = cv::Mat::zeros(hist.size(), hist.type());
+    hist.copyTo(hist_plot);
+
     int hist_w = 640; int hist_h = 480;
-    int bin_w = cvRound( (double) hist_w/num_bins );
+    int bin_w = cvRound( (double) hist_w/num_bins );    
 
     cv::Mat histImage( hist_h, hist_w, CV_32F, cv::Scalar(0) );    
     // Normalize the result to [ 0, histImage.rows ]
-    normalize(hist_img, hist_img, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+
+    normalize(hist_plot, hist_plot, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
 
     /// Draw for each channel
-    int thickness = 3;
+    int thickness = 2;
     for( int i = 1; i < num_bins; i++ )
     {
-        line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist.at<unsigned char>(i-1)) ) ,
-                        cv::Point( bin_w*(i), hist_h - cvRound(hist.at<unsigned char>(i)) ),
-                        cv::Scalar( 255, 0, 0), 3, 8, 0  );
+        line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist_plot.at<int>(i-1)) ) ,
+                        cv::Point( bin_w*(i), hist_h - cvRound(hist_plot.at<int>(i)) ),
+                        cv::Scalar( 255, 0, 0), thickness, 8, 0  );
     }
     /// Display    
     cv::imshow("hist Demo", histImage ); 
-
+*/
     //---------------------------------------// 
     // Calculate cumulative histogram
     //---------------------------------------// 
@@ -82,8 +85,8 @@ void equalOfHist( cv::Mat& src) // src type: CV_8U
     int num_equal_freq = floor(matSize / num_bins);
     int num_res_pixel = matSize - num_equal_freq * num_bins;
     
-    std::cout << "num_equal_freq: " << num_equal_freq << std::endl;
-    std::cout << "num_res_pixel: " << num_res_pixel << std::endl;
+//    std::cout << "num_equal_freq: " << num_equal_freq << std::endl;
+//    std::cout << "num_res_pixel: " << num_res_pixel << std::endl;
 
     cv::Mat equalFreq = cv::Mat::zeros(hist.size(), CV_32SC1);
 
@@ -149,32 +152,36 @@ void equalOfHist( cv::Mat& src) // src type: CV_8U
         }        
     }
 
+//    cv::imshow("output", output);
     //---------------------------------------// 
     // show new histogram
-    //---------------------------------------//    
-    cv::Mat map_hist_img = cv::Mat::zeros(1, num_bins, CV_32SC1); // CV_32SC1: int type
+    //---------------------------------------//
+/*    
+    cv::Mat eqhist_plot = cv::Mat::zeros(1, num_bins, CV_32SC1); // CV_32SC1: int type
+    
     for(int i=0; i < src.rows; i++)
     {    
         for(int j=0; j < src.cols; j++)        
         {            
-            idx = output.at<unsigned char>(i,j); // value of src = cnt of hist                                    
-            map_hist_img.at<int>(0, idx) += 1;        // only one row in hist
+            idx = output.at<unsigned char>(i,j);    // value of src = cnt of hist                                    
+            eqhist_plot.at<int>(0, idx) += 1;       // only one row in hist
         }        
-    } 
-    
+    }         
+
     cv::Mat eqHistImage( hist_h, hist_w, CV_32F, cv::Scalar(0) );
     // Normalize the result to [ 0, histImage.rows ]
-    normalize(map_hist_img, map_hist_img, 0, eqHistImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+    normalize(eqhist_plot, eqhist_plot, 0, eqHistImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
 
     /// Draw for each channel
     for( int i = 1; i < num_bins; i++ )
     {
-        line( eqHistImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
-                            cv::Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
+        line( eqHistImage, cv::Point( bin_w*(i-1), hist_h - cvRound(eqhist_plot.at<int>(i-1)) ) ,
+                            cv::Point( bin_w*(i), hist_h - cvRound(eqhist_plot.at<int>(i)) ),
                             cv::Scalar( 255, 0, 0), thickness, 8, 0  );
     }
     // Display
     cv::imshow("eqhist Demo", eqHistImage );
+*/
 /*
     std::cout <<"matSize:\n" << matSize << std::endl;
     std::cout <<"histogram:\n" << hist << std::endl;
@@ -183,8 +190,6 @@ void equalOfHist( cv::Mat& src) // src type: CV_8U
     std::cout <<"cu_equalHist:\n" << cu_equalFreq << std::endl;
     std::cout <<"mapping:\n" << mapping << std::endl;
     std::cout <<"output:\n" << output << std::endl;
-*/
-    cv::imshow("output", output);
-    
+*/    
 }
 
