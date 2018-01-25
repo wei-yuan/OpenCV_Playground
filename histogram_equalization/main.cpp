@@ -29,8 +29,9 @@ int main()
     std::string INPUT_FILENAME ("720p.jpg");
     cv::Mat src = cv::imread(INPUT_FILE);       
     */
-    std::string INPUT_FILE_PATH ("/home/alex504/img_and_video_data_set/video");
-    std::string INPUT_FILENAME ("car.mp4");     
+    std::string INPUT_FILE_PATH ("/home/alex504/img_and_video_data_set/video/1min");
+    //std::string INPUT_FILENAME ("car.mp4");     
+    std::string INPUT_FILENAME ("1440p_1min.mp4"); 
        
     std::string INPUT_FILE = INPUT_FILE_PATH + '/' + INPUT_FILENAME;
  
@@ -75,37 +76,40 @@ int main()
     int cnt = 0;
     cv::Mat frame, grey;    
     // non-opencl time measurement    
-    double opencv_equalizeHist_out_side_t1 = cv::getTickCount();    
+    double mat_eH_outside_t1 = cv::getTickCount();    
     for(;;)
     {
         video >> frame; // get a new frame from video    
 
         cv::cvtColor(frame, grey, cv::COLOR_BGR2GRAY);    
         cv::Mat eqOutput;
-        double opencv_equalizeHist_t1 = cv::getTickCount();
+        //double mat_eh_inside_t1 = cv::getTickCount();
         cv::equalizeHist(grey, eqOutput);
-        double opencv_equalizeHist_t2 = cv::getTickCount();                
+        //double mat_eh_inside_t2 = cv::getTickCount();                
 
         // Time result
-        double opencv_equalizeHist_time = (opencv_equalizeHist_t2 - opencv_equalizeHist_t1)/ cv::getTickFrequency();    
-        mat_time.push_back(opencv_equalizeHist_time);                    
+        //double mat_eH_time = (mat_eh_inside_t2 - mat_eh_inside_t1)/ cv::getTickFrequency();
+        //mat_time.push_back(mat_eH_time);                  
         
         cnt++;
         if(cnt == frameNumbers) break;
-
     }
-    double opencv_equalizeHist_out_side_t2 = cv::getTickCount();    
-    double delta_out_side_time = (opencv_equalizeHist_out_side_t2 - opencv_equalizeHist_out_side_t1) / cv::getTickFrequency();
-    float average = accumulate( mat_time.begin(), mat_time.end(), 0.0) / delta_out_side_time;     
+    double mat_eH_outside_t2 = cv::getTickCount();    
+    // total time
+    double mat_total_time = (mat_eH_outside_t2 - mat_eH_outside_t1) / cv::getTickFrequency();
+    // fps
+    int fps = frameNumbers / mat_total_time;     
     
-    std::cout <<"EqualizeHist() average time of UMat: "<< average << std::endl;
+    std::cout <<"mat_total_time: "<< mat_total_time << std::endl;
+    std::cout <<"EqualizeHist() - fps of Mat: "<< fps << std::endl;
 
+    // input video file again
     cv::VideoCapture cap(INPUT_FILE);    
 
     cnt = 0;
     cv::Mat uframe, umat_grey;
     // with opencl time measurement    
-    double opencv_umat_equalizeHist_out_side_t1 = cv::getTickCount();    
+    double umat_eH_outside_t1 = cv::getTickCount();    
     for(;;)
     {
         cap >> uframe;    
@@ -113,21 +117,24 @@ int main()
         cv::cvtColor(uframe, umat_grey, cv::COLOR_BGR2GRAY);
         // Time measurement    
         cv::UMat umat_eqOutput;
-        double opencv_umat_equalizeHist_t1 = cv::getTickCount();
-        //cv::equalizeHist(umat_grey, umat_eqOutput);
-        double opencv_umat_equalizeHist_t2 = cv::getTickCount();
+        //double opencv_umat_equalizeHist_t1 = cv::getTickCount();
+        cv::equalizeHist(umat_grey, umat_eqOutput);
+        //double opencv_umat_equalizeHist_t2 = cv::getTickCount();
 
-        double opencv_umat_equalizeHist_time = (opencv_umat_equalizeHist_t2 - opencv_umat_equalizeHist_t1)/ cv::getTickFrequency();    
-        umat_time.push_back(opencv_umat_equalizeHist_time);
+        //double opencv_umat_equalizeHist_time = (opencv_umat_equalizeHist_t2 - opencv_umat_equalizeHist_t1)/ cv::getTickFrequency();    
+        //umat_time.push_back(opencv_umat_equalizeHist_time);
 
         cnt++;
         if(cnt == frameNumbers) break; 
     }
-    double opencv_umat_equalizeHist_out_side_t2 = cv::getTickCount();    
-    double delta_umat_out_side_time = (opencv_umat_equalizeHist_out_side_t2 - opencv_umat_equalizeHist_out_side_t1) / cv::getTickFrequency();
-    average = accumulate( umat_time.begin(), umat_time.end(), 0.0) / delta_umat_out_side_time;     
+    double umat_eH_outside_t2 = cv::getTickCount();    
+    // total time
+    double umat_total_time = (umat_eH_outside_t2 - umat_eH_outside_t1) / cv::getTickFrequency();
+    // fps
+    fps = frameNumbers / umat_total_time; 
     
-    std::cout <<"EqualizeHist() average time of UMat: "<< average << std::endl;
-    std::cout << (opencv_umat_equalizeHist_out_side_t2 - opencv_umat_equalizeHist_out_side_t1)/cv::getTickFrequency() << std::endl;
+    std::cout <<"umat_total_time: "<< umat_total_time << std::endl;
+    std::cout <<"EqualizeHist() - fps of UMat: "<< fps << std::endl;
+    
     return 0;
 }
