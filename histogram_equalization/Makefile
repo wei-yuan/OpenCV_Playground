@@ -6,8 +6,8 @@ OBJS=$(addprefix objs/, $(patsubst %.cpp,%.o,$(SRCS)))
 DEPS=$(addprefix objs/, $(patsubst %.cpp,%.d,$(SRCS)))
 
 CXX=g++
-DEBUG = -g
-CFLAGS= -Wall `pkg-config --cflags opencv` #-std=c++11
+DEBUG=-g
+CFLAGS=-O3 -fopenmp -g -Wall `pkg-config --cflags opencv` #-std=c++11
 LIBS=`pkg-config --libs opencv`
 
 # OpenCL Dynamic Linking
