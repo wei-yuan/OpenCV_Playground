@@ -30,7 +30,7 @@ https://docs.opencv.org/2.4/doc/tutorials/core/how_to_scan_images/how_to_scan_im
 namespace CPU
 {
 
-void run_equalizeHist(cv::VideoCapture video)
+float run_equalizeHist(cv::VideoCapture video)
 {
     video.set(cv::CAP_PROP_POS_FRAMES, 0);
 
@@ -57,14 +57,16 @@ void run_equalizeHist(cv::VideoCapture video)
 */              
     std::cout << "Elapse Time: " << elapsed_seconds << std::endl;
     std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds
-              << std::endl;    
+              << std::endl;
+
+    return video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds;
 }
 }
 
 namespace GPU
 {
 
-void run_equalizeHist(cv::VideoCapture video)
+float run_equalizeHist(cv::VideoCapture video)
 {
     video.set(cv::CAP_PROP_POS_FRAMES, 0);
 
@@ -72,7 +74,7 @@ void run_equalizeHist(cv::VideoCapture video)
     double start = (double)cv::getTickCount();
 
     int frameNumber = video.get(cv::CAP_PROP_FRAME_COUNT);
-    #pragma omp parallel for
+    #pragma omp parallel for // OpenMP
     for (int i = 0; i < frameNumber; i++) {
         cv::UMat frame, grey;
         cv::UMat eqOutput;
@@ -97,6 +99,8 @@ void run_equalizeHist(cv::VideoCapture video)
     std::cout << "Elapse Time: " << elapsed_seconds << std::endl;
     std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds
               << std::endl;               
+
+    return video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds;
 }
 }
 
@@ -118,8 +122,12 @@ int main(int argc, char *argv[])
 
     std::cout << "frameNumbers: " << video.get(cv::CAP_PROP_FRAME_COUNT) << std::endl;
 
-    CPU::run_equalizeHist(video);
-    GPU::run_equalizeHist(video);
+    float cpu_fps = 0, gpu_fps = 0;
+    cpu_fps = CPU::run_equalizeHist(video);
+    gpu_fps = GPU::run_equalizeHist(video);
+
+    // speed up
+    std::cout << "Speed-up of OpenCL: " << gpu_fps / cpu_fps << std::endl;
 
     return 0;
 }
