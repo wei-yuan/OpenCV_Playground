@@ -51,7 +51,7 @@ float run_equalizeHist(cv::VideoCapture video)
         t1 = (double)cv::getTickCount();
         cv::cvtColor(frame, grey, cv::COLOR_BGR2GRAY);
         t2              = (double)cv::getTickCount();
-        total_timer_cvt = total_timer_capture + (double)((t2 - t1) / cv::getTickFrequency());
+        total_timer_cvt = total_timer_cvt + (double)((t2 - t1) / cv::getTickFrequency());
 
         t1 = (double)cv::getTickCount();
         cv::equalizeHist(grey, eqOutput);
