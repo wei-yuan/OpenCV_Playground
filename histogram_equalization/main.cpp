@@ -11,19 +11,19 @@ https://docs.opencv.org/2.4/doc/tutorials/core/how_to_scan_images/how_to_scan_im
 
 */
 //--------------------------------------------------------------
-#include <iostream>
 #include <fstream>
-#include <string>
+#include <iostream>
 #include <numeric>
-#include <vector>
+#include <string>
 #include <unistd.h>
+#include <vector>
 //#include <chrono>  // c++11
 
 // OpenCV Library
-#include "opencv2/opencv.hpp"
-#include "opencv2/core/ocl.hpp"
 #include "opencv2/core/core.hpp"
+#include "opencv2/core/ocl.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/opencv.hpp"
 
 #include "main.hpp"
 
@@ -34,30 +34,47 @@ float run_equalizeHist(cv::VideoCapture video)
 {
     video.set(cv::CAP_PROP_POS_FRAMES, 0);
 
-    //auto start = std::chrono::system_clock::now();
+    double total_timer_capture = 0, total_timer_cvt = 0, total_timer_eqHist = 0, t1 = 0, t2 = 0;
+    // auto start = std::chrono::system_clock::now();
     double start = (double)cv::getTickCount();
-    for (;;) {
+    for (;;)
+    {
         cv::Mat frame, grey;
         cv::Mat eqOutput;
-        if (video.read(frame) == false) break;
 
+        t1 = (double)cv::getTickCount();
+        if (video.read(frame) == false)
+            break;
+        t2                  = (double)cv::getTickCount();
+        total_timer_capture = total_timer_capture + (double)((t2 - t1) / cv::getTickFrequency());
+
+        t1 = (double)cv::getTickCount();
         cv::cvtColor(frame, grey, cv::COLOR_BGR2GRAY);
+        t2              = (double)cv::getTickCount();
+        total_timer_cvt = total_timer_capture + (double)((t2 - t1) / cv::getTickFrequency());
+
+        t1 = (double)cv::getTickCount();
         cv::equalizeHist(grey, eqOutput);
+        t2                 = (double)cv::getTickCount();
+        total_timer_eqHist = total_timer_eqHist + (double)((t2 - t1) / cv::getTickFrequency());
     }
-    //auto end = std::chrono::system_clock::now();
+    // auto end = std::chrono::system_clock::now();
     double end = (double)cv::getTickCount();
 
-    //std::chrono::duration<double> elapsed_seconds = end - start;
+    // std::chrono::duration<double> elapsed_seconds = end - start;
     double elapsed_seconds = (end - start) / cv::getTickFrequency();
 
-/*
-    std::cout << "Elapse Time: " << elapsed_seconds.count() << std::endl;
-    std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds.count()
-              << std::endl;
-*/              
+    /*
+        std::cout << "Elapse Time: " << elapsed_seconds.count() << std::endl;
+        std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds.count()
+                  << std::endl;
+    */
     std::cout << "Elapse Time: " << elapsed_seconds << std::endl;
-    std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds
-              << std::endl;
+    std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds << std::endl;
+    // output time
+    std::cout << "init_time: " << time << std::endl;
+    std::cout << "total time of capture: " << total_timer_capture << ", total time of cvtcolor: " << total_timer_cvt
+              << ", total time  of eqHist: " << total_timer_eqHist << std::endl;
 
     return video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds;
 }
@@ -70,35 +87,31 @@ float run_equalizeHist(cv::VideoCapture video)
 {
     video.set(cv::CAP_PROP_POS_FRAMES, 0);
 
-    //auto start = std::chrono::system_clock::now();
+    // auto start = std::chrono::system_clock::now();
     double start = (double)cv::getTickCount();
 
     int frameNumber = video.get(cv::CAP_PROP_FRAME_COUNT);
-    #pragma omp parallel for // OpenMP
-    for (int i = 0; i < frameNumber; i++) {
+    for (int i = 0; i < frameNumber; i++)
+    {
         cv::UMat frame, grey;
         cv::UMat eqOutput;
-        #pragma omp critical
-        {
-            video.read(frame);
-        }
-        //if (video.read(frame) == false) break;
+        video.read(frame);
+        // if (video.read(frame) == false) break;
 
         cv::cvtColor(frame, grey, cv::COLOR_BGR2GRAY);
         cv::equalizeHist(grey, eqOutput);
     }
-    //auto end = std::chrono::system_clock::now();
+    // auto end = std::chrono::system_clock::now();
     double end = (double)cv::getTickCount();
 
     double elapsed_seconds = (end - start) / cv::getTickFrequency();
-/*
-    std::cout << "Elapse Time: " << elapsed_seconds.count() << std::endl;
-    std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds.count()
-              << std::endl;
-*/
+    /*
+        std::cout << "Elapse Time: " << elapsed_seconds.count() << std::endl;
+        std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds.count()
+                  << std::endl;
+    */
     std::cout << "Elapse Time: " << elapsed_seconds << std::endl;
-    std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds
-              << std::endl;               
+    std::cout << "FPS " << video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds << std::endl;
 
     return video.get(cv::CAP_PROP_FRAME_COUNT) / elapsed_seconds;
 }
@@ -106,8 +119,8 @@ float run_equalizeHist(cv::VideoCapture video)
 
 int main(int argc, char *argv[])
 {
-    std::string file_path ("../../img_and_video_data_set/video/1min");
-    std::string file_name ("720p_1min.mp4");
+    std::string file_path("../../img_and_video_data_set/video/1min");
+    std::string file_name("720p_1min.mp4");
     std::string input_file_video = file_path + '/' + file_name;
 
     std::string input_file = (argc == 2) ? std::string(argv[1]) : input_file_video;
@@ -115,7 +128,8 @@ int main(int argc, char *argv[])
     cv::VideoCapture video(input_file);
 
     // check video file
-    if (!video.isOpened()) {
+    if (!video.isOpened())
+    {
         std::cout << "File not found: " << input_file << std::endl;
         exit(1);
     }

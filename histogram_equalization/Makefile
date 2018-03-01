@@ -7,15 +7,13 @@ DEPS=$(addprefix objs/, $(patsubst %.cpp,%.d,$(SRCS)))
 
 CXX=g++
 DEBUG=-g
-CFLAGS=-O3 -fopenmp -g -Wall `pkg-config --cflags opencv` #-std=c++11
+CFLAGS=-O3 -fopenmp -g -Wall `pkg-config --cflags opencv` -std=c++98
 LIBS=`pkg-config --libs opencv`
 
 # OpenCL Dynamic Linking
 #PREFIX=/usr/local/cuda/targets/x86_64-linux
 LFLAGS=-lOpenCL #-L$(PREFIX)/lib -I$(PREFIX)/include 
-
 LOCAL_CFLAGS=-Wno-deprecated-declarations
-
 TARGET=main #lane_detection_and_tracking
 
 .PHONY: all clean execute directories
